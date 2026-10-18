@@ -89,7 +89,7 @@ const strings = {
     wireTool: 'Connect wires',
     snap: 'Snap to grid',
     dropHint: 'Drag a component here, or click one in the library',
-    canvasHint: 'Click an output pin, then an input pin to connect',
+    canvasHint: 'Drag empty space to move the full circuit · click output then input to connect',
     zoomOut: 'Zoom out',
     zoomIn: 'Zoom in',
     properties: 'Properties',
@@ -113,7 +113,7 @@ const strings = {
     inputCountLabel: 'Inputs',
     outputCountLabel: 'Outputs',
     quickTips: 'Quick tips',
-    tipDrag: 'Drag parts from the library or move them on the canvas.',
+    tipDrag: 'Drag empty canvas space to move the full circuit, or drag a component to move it alone.',
     tipWire: 'Click a pin on the right, then a pin on the left to wire.',
     tipToggle: 'Click an input switch to toggle its logic state.',
     openSource: 'OPEN SOURCE',
@@ -135,7 +135,7 @@ const strings = {
     tableLimit: 'Showing the first 8 inputs. Additional inputs use their current switch state.',
     helpTitle: 'Build a logic circuit',
     helpStep1Title: 'Place components',
-    helpStep1: 'Click a library part to add it, or drag it onto the canvas. Move parts by dragging.',
+    helpStep1: 'Click or drag a part onto the canvas. Drag empty space to move the full circuit; drag a part to move it alone.',
     helpStep2Title: 'Connect signals',
     helpStep2: 'Click a component output pin (right side), then a destination input pin (left side).',
     helpStep3Title: 'Test the logic',
@@ -208,7 +208,7 @@ const strings = {
     wireTool: 'Connecter des fils',
     snap: 'Aligner sur la grille',
     dropHint: 'Glissez un composant ici ou cliquez dans la bibliothèque',
-    canvasHint: 'Cliquez sur une sortie, puis sur une entrée pour relier',
+    canvasHint: 'Glissez un espace vide pour déplacer le circuit · cliquez sur les broches pour relier',
     zoomOut: 'Dézoomer',
     zoomIn: 'Zoomer',
     properties: 'Propriétés',
@@ -232,7 +232,7 @@ const strings = {
     inputCountLabel: 'Entrées',
     outputCountLabel: 'Sorties',
     quickTips: 'Astuces',
-    tipDrag: 'Glissez des composants depuis la bibliothèque ou déplacez-les sur la zone.',
+    tipDrag: 'Glissez une zone vide pour déplacer tout le circuit, ou un composant pour le déplacer seul.',
     tipWire: 'Cliquez sur une sortie à droite, puis sur une entrée à gauche.',
     tipToggle: 'Cliquez sur un interrupteur pour changer son état logique.',
     openSource: 'LOGICIEL LIBRE',
@@ -254,7 +254,7 @@ const strings = {
     tableLimit: 'Seules les 8 premières entrées sont affichées. Les suivantes gardent leur état actuel.',
     helpTitle: 'Créer un circuit logique',
     helpStep1Title: 'Placer les composants',
-    helpStep1: 'Cliquez sur un composant ou glissez-le sur la zone. Déplacez-le en le faisant glisser.',
+    helpStep1: 'Cliquez sur un composant ou glissez-le sur la zone. Glissez un espace vide pour déplacer tout le circuit.',
     helpStep2Title: 'Relier les signaux',
     helpStep2: 'Cliquez sur une sortie (à droite), puis sur une entrée de destination (à gauche).',
     helpStep3Title: 'Tester la logique',
@@ -312,6 +312,9 @@ const selectedNodeId = ref(null)
 const selectedWireId = ref(null)
 const wireStart = ref(null)
 const dragging = ref(null)
+const panOffset = ref({ x: 0, y: 0 })
+const canvasPanDrag = ref(null)
+const isPanning = ref(false)
 const isRunning = ref(true)
 const showHelp = ref(false)
 const searchQuery = ref('')
@@ -340,7 +343,7 @@ const truth = computed(() => buildTruthTable(nodes.value, wires.value))
 const truthRows = computed(() => truth.value.rows)
 const viewWidth = computed(() => Math.max(1, canvasSize.value.width / zoom.value))
 const viewHeight = computed(() => Math.max(1, canvasSize.value.height / zoom.value))
-const viewBox = computed(() => `0 0 ${viewWidth.value} ${viewHeight.value}`)
+const viewBox = computed(() => `${panOffset.value.x} ${panOffset.value.y} ${viewWidth.value} ${viewHeight.value}`)
 const truthPanelStyle = computed(() => ({ height: truthCollapsed.value ? '42px' : truthFullscreen.value ? '100dvh' : `${truthHeight.value}px` }))
 const zoomLabel = computed(() => `${Math.round(zoom.value * 100)}%`)
 const workspaceComponentCount = computed(() => nodes.value.length)
@@ -447,17 +450,19 @@ function snapCoordinate(value) {
 }
 
 function clampNodePosition(x, y) {
-  const maxX = Math.max(8, viewWidth.value - NODE_WIDTH - 20)
-  const maxY = Math.max(8, viewHeight.value - NODE_HEIGHT - 20)
+  const minX = panOffset.value.x + 8
+  const minY = panOffset.value.y + 8
+  const maxX = Math.max(minX, panOffset.value.x + viewWidth.value - NODE_WIDTH - 20)
+  const maxY = Math.max(minY, panOffset.value.y + viewHeight.value - NODE_HEIGHT - 20)
   return {
-    x: Math.max(8, Math.min(maxX, snapCoordinate(x))),
-    y: Math.max(8, Math.min(maxY, snapCoordinate(y))),
+    x: Math.max(minX, Math.min(maxX, snapCoordinate(x))),
+    y: Math.max(minY, Math.min(maxY, snapCoordinate(y))),
   }
 }
 
 function nextSpawnPosition() {
-  const x = Math.max(30, viewWidth.value / 2 - NODE_WIDTH / 2) + (idCounter % 4) * 32
-  const y = Math.max(45, viewHeight.value / 2 - NODE_HEIGHT / 2) + (idCounter % 5) * 26
+  const x = panOffset.value.x + Math.max(30, viewWidth.value / 2 - NODE_WIDTH / 2) + (idCounter % 4) * 32
+  const y = panOffset.value.y + Math.max(45, viewHeight.value / 2 - NODE_HEIGHT / 2) + (idCounter % 5) * 26
   return clampNodePosition(x, y)
 }
 
@@ -499,8 +504,8 @@ function pointFromEvent(event) {
   if (!svg) return { x: 0, y: 0 }
   const rect = svg.getBoundingClientRect()
   return {
-    x: ((event.clientX - rect.left) / Math.max(1, rect.width)) * viewWidth.value,
-    y: ((event.clientY - rect.top) / Math.max(1, rect.height)) * viewHeight.value,
+    x: panOffset.value.x + ((event.clientX - rect.left) / Math.max(1, rect.width)) * viewWidth.value,
+    y: panOffset.value.y + ((event.clientY - rect.top) / Math.max(1, rect.height)) * viewHeight.value,
   }
 }
 
@@ -532,6 +537,24 @@ function handleNodePointerDown(event, node) {
   try { canvasSvg.value?.setPointerCapture(event.pointerId) } catch { /* some browsers do not support capture on SVG */ }
 }
 
+function beginCanvasPan(event) {
+  const rect = canvasSvg.value?.getBoundingClientRect()
+  if (!rect) return
+  canvasPanDrag.value = {
+    pointerId: event.pointerId,
+    clientX: event.clientX,
+    clientY: event.clientY,
+    startX: panOffset.value.x,
+    startY: panOffset.value.y,
+    startViewWidth: viewWidth.value,
+    startViewHeight: viewHeight.value,
+    width: Math.max(1, rect.width),
+    height: Math.max(1, rect.height),
+    moved: false,
+  }
+  try { canvasSvg.value?.setPointerCapture(event.pointerId) } catch { /* some browsers do not support pointer capture */ }
+}
+
 function handleCanvasPointerDown(event) {
   if (event.button !== 0) return
   if (event.target.closest?.('.wire-hit')) return
@@ -541,10 +564,29 @@ function handleCanvasPointerDown(event) {
   if (wireStart.value) {
     wireStart.value = null
     toolMode.value = 'select'
+    return
   }
+  beginCanvasPan(event)
 }
 
 function handleCanvasPointerMove(event) {
+  const pan = canvasPanDrag.value
+  if (pan && pan.pointerId === event.pointerId) {
+    const deltaX = event.clientX - pan.clientX
+    const deltaY = event.clientY - pan.clientY
+    if (!pan.moved && Math.hypot(deltaX, deltaY) >= 4) {
+      pan.moved = true
+      isPanning.value = true
+    }
+    if (pan.moved) {
+      const maxPan = 50000
+      panOffset.value = {
+        x: Math.max(-maxPan, Math.min(maxPan, pan.startX - (deltaX / pan.width) * pan.startViewWidth)),
+        y: Math.max(-maxPan, Math.min(maxPan, pan.startY - (deltaY / pan.height) * pan.startViewHeight)),
+      }
+    }
+  }
+
   const point = pointFromEvent(event)
   if (dragging.value) {
     const node = nodes.value.find((item) => item.id === dragging.value.id)
@@ -562,6 +604,8 @@ function handleCanvasPointerMove(event) {
 
 function handleCanvasPointerUp() {
   dragging.value = null
+  canvasPanDrag.value = null
+  isPanning.value = false
 }
 
 function beginWire(event, node) {
@@ -769,7 +813,13 @@ function toggleSimulation() {
 }
 
 function changeZoom(delta) {
+  const centerX = panOffset.value.x + viewWidth.value / 2
+  const centerY = panOffset.value.y + viewHeight.value / 2
   zoom.value = Math.max(0.65, Math.min(1.55, Math.round((zoom.value + delta) * 100) / 100))
+  panOffset.value = {
+    x: centerX - viewWidth.value / 2,
+    y: centerY - viewHeight.value / 2,
+  }
 }
 
 function sanitizeLoadedState(data) {
@@ -783,8 +833,8 @@ function sanitizeLoadedState(data) {
       id: raw.id.slice(0, 100),
       type: raw.type,
       label: String(raw.label || raw.type).slice(0, 20),
-      x: Number.isFinite(Number(raw.x)) ? Math.max(0, Math.min(50000, Number(raw.x))) : 40,
-      y: Number.isFinite(Number(raw.y)) ? Math.max(0, Math.min(50000, Number(raw.y))) : 40,
+      x: Number.isFinite(Number(raw.x)) ? Math.max(-100000, Math.min(100000, Number(raw.x))) : 40,
+      y: Number.isFinite(Number(raw.y)) ? Math.max(-100000, Math.min(100000, Number(raw.y))) : 40,
       ...(raw.type === 'INPUT' ? { value: Boolean(raw.value) } : {}),
     })
   }
@@ -820,6 +870,8 @@ function sanitizeLoadedState(data) {
     truthHeight: Number.isFinite(data.truthHeight) ? Math.max(145, Math.min(720, data.truthHeight)) : 232,
     snapToGrid: data.snapToGrid !== false,
     zoom: Number.isFinite(data.zoom) ? Math.max(0.65, Math.min(1.55, data.zoom)) : 1,
+    panX: Number.isFinite(data.panX) ? Math.max(-50000, Math.min(50000, data.panX)) : 0,
+    panY: Number.isFinite(data.panY) ? Math.max(-50000, Math.min(50000, data.panY)) : 0,
   }
 }
 
@@ -839,6 +891,8 @@ function savePayload() {
     truthHeight: truthHeight.value,
     snapToGrid: snapToGrid.value,
     zoom: zoom.value,
+    panX: panOffset.value.x,
+    panY: panOffset.value.y,
   }
 }
 
@@ -1030,6 +1084,7 @@ function restoreFromStorage() {
     truthHeight.value = parsed.truthHeight
     snapToGrid.value = parsed.snapToGrid
     zoom.value = parsed.zoom
+    panOffset.value = { x: parsed.panX, y: parsed.panY }
     return true
   } catch (error) {
     console.warn('Saved circuit could not be restored:', error)
@@ -1305,7 +1360,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div ref="canvasRegion" class="canvas-region" :class="{ 'is-dragging-part': dragging, 'is-wiring': wireStart }">
+        <div ref="canvasRegion" class="canvas-region" :class="{ 'is-dragging-part': dragging, 'is-panning': isPanning, 'is-wiring': wireStart }">
           <svg
             ref="canvasSvg"
             class="schematic-canvas"
@@ -1327,8 +1382,8 @@ onBeforeUnmount(() => {
                 <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
               </filter>
             </defs>
-            <rect x="0" y="0" width="100%" height="100%" class="canvas-base" />
-            <rect x="0" y="0" width="100%" height="100%" fill="url(#dot-grid)" class="grid-dots" />
+            <rect :x="panOffset.x" :y="panOffset.y" :width="viewWidth" :height="viewHeight" class="canvas-base" />
+            <rect :x="panOffset.x" :y="panOffset.y" :width="viewWidth" :height="viewHeight" fill="url(#dot-grid)" class="grid-dots" />
             <g class="wire-layer">
               <g v-for="wire in wires" :key="wire.id" class="wire-group">
                 <path :d="wirePath(wire)" class="wire-path-under" />
