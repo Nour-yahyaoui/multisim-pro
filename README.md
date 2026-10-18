@@ -1,4 +1,4 @@
-# Logic Lab — Circuit Studio
+# Logic Lab v2.0.3 — Circuit Studio
 
 A lightweight, open-source digital logic workbench built with Vue 3. Place logic gates, connect signals, toggle inputs, and explore the resulting **truth table / tableau de vérité**—right in the browser.
 
@@ -7,7 +7,7 @@ A lightweight, open-source digital logic workbench built with Vue 3. Place logic
 ## Features
 
 - **Schematic editor:** drag components from the library, click to add, and drag to move them on a dotted grid.
-- **Digital components:** interactive inputs, VCC (logic HIGH), GND (logic LOW), LED outputs, and AND, OR, NOT, XOR, NAND, NOR, and XNOR gates.
+- **Digital components:** interactive inputs, VCC (logic HIGH), GND (logic LOW), LED outputs, and AND, OR, NOT (inverter), XOR, NAND, NOR, and XNOR gates.
 - **Pin-to-pin wiring:** click an output pin, then a destination input pin. Existing input connections are replaced cleanly.
 - **Live logic simulation:** toggle an input and immediately see active wires, LED state, and the matching truth-table row update.
 - **Truth table:** generated from the circuit, with up to eight input variables; copy results as CSV.

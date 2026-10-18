@@ -141,7 +141,9 @@ kbd { font-family: 'DM Mono', ui-monospace, monospace; color: #78869a; backgroun
 .gate-mini-symbol { width: 27px; height: 27px; display: grid; place-items: center; flex: 0 0 27px; color: #a9c2f5; border: 1px solid rgba(120,157,222,.24); border-radius: 7px; background: rgba(92,133,204,.1); font-size: 11px; font-family: 'DM Mono', monospace; font-weight: 500; }
 .gate-mini-symbol.inverted::after { content: ''; width: 4px; height: 4px; position: absolute; margin: 0 0 0 19px; border: 1px solid #9bb5e8; border-radius: 50%; background: #101927; }
 .gate-mini-symbol span { transform: translateY(-.5px); }
+.gate-card-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
 .gate-card-label { font-size: 9px; font-weight: 700; letter-spacing: .035em; }
+.not-gate-hint { color: #7b8da4; font-size: 6px; line-height: 1; letter-spacing: .06em; }
 .gate-add-icon { position: absolute; right: 7px; color: #6c829f; opacity: 0; }
 .gate-card:hover .gate-add-icon { opacity: 1; }
 .no-search-results { min-height: 108px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; color: #758399; font-size: 10px; }

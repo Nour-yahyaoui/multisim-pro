@@ -100,6 +100,7 @@ const strings = {
     tipWire: 'Click a pin on the right, then a pin on the left to wire.',
     tipToggle: 'Click an input switch to toggle its logic state.',
     openSource: 'OPEN SOURCE',
+    notHint: 'Inverter: output is the opposite of the input',
     by: 'Designed by',
     truthTable: 'Truth table',
     combinations: 'combinations',
@@ -207,6 +208,7 @@ const strings = {
     tipWire: 'Cliquez sur une sortie à droite, puis sur une entrée à gauche.',
     tipToggle: 'Cliquez sur un interrupteur pour changer son état logique.',
     openSource: 'LOGICIEL LIBRE',
+    notHint: 'Inverseur : la sortie est l’opposé de l’entrée',
     by: 'Créé par',
     truthTable: 'Tableau de vérité',
     combinations: 'combinaisons',
@@ -313,7 +315,7 @@ const componentCatalog = [
   { type: 'INPUT', group: 'sources', title: 'inputSwitch', hint: 'inputHint', badge: 'IN', tint: 'mint' },
   { type: 'VCC', group: 'sources', title: 'VCC', hint: 'vccHint', badge: 'V+', tint: 'amber' },
   { type: 'GND', group: 'sources', title: 'ground', hint: 'groundHint', badge: 'GND', tint: 'slate' },
-  ...GATE_TYPES.map((type) => ({ type, group: 'gates', title: type, hint: '', badge: type, tint: 'blue' })),
+  ...GATE_TYPES.map((type) => ({ type, group: 'gates', title: type, hint: type === 'NOT' ? 'notHint' : '', badge: type, tint: 'blue' })),
   { type: 'LED', group: 'outputs', title: 'ledOutput', hint: 'ledHint', badge: 'LED', tint: 'rose' },
 ]
 const filteredComponents = computed(() => {
@@ -1111,14 +1113,14 @@ onBeforeUnmount(() => {
                 :key="component.type"
                 class="gate-card"
                 draggable="true"
-                :title="`${component.type} gate · ${language === 'fr' ? 'cliquer ou glisser' : 'click or drag to add'}`"
+                :title="component.type === 'NOT' ? `NOT · ${t(component.hint)}` : `${component.type} gate · ${language === 'fr' ? 'cliquer ou glisser' : 'click or drag to add'}`"
                 @click="addCatalogComponent(component)"
                 @dragstart="onPaletteDragStart($event, component.type)"
               >
                 <span class="gate-mini-symbol" :class="{ inverted: ['NAND', 'NOR', 'XNOR', 'NOT'].includes(component.type) }">
                   <span>{{ component.type === 'NOT' ? '¬' : component.type === 'NAND' ? '&' : component.type === 'NOR' ? '≥1' : component.type === 'XNOR' ? '=1' : component.type === 'XOR' ? '=1' : component.type === 'OR' ? '≥1' : '&' }}</span>
                 </span>
-                <span class="gate-card-label">{{ component.type }}</span>
+                <span class="gate-card-copy"><span class="gate-card-label">{{ component.type }}</span><small v-if="component.type === 'NOT'" class="not-gate-hint">{{ language === 'fr' ? 'INVERSEUR' : 'INVERTER' }}</small></span>
                 <Plus :size="12" class="gate-add-icon" />
               </button>
             </div>
@@ -1150,7 +1152,7 @@ onBeforeUnmount(() => {
             <div><strong>{{ language === 'fr' ? 'Astuce' : 'Quick tip' }}</strong><p>{{ language === 'fr' ? 'Cliquez pour ajouter. Glissez sur la zone pour placer précisément.' : 'Click to add. Drag onto the canvas for precise placement.' }}</p></div>
           </div>
         </div>
-        <div class="palette-footer"><span class="footer-mini-mark"><CircuitBoard :size="13" /></span><span>LOGIC LAB</span><span class="footer-version">v1.0</span></div>
+        <div class="palette-footer"><span class="footer-mini-mark"><CircuitBoard :size="13" /></span><span>LOGIC LAB</span><span class="footer-version">v2.0.3</span></div>
       </aside>
 
       <div class="vertical-resizer left-resizer" role="separator" aria-orientation="vertical" :aria-label="language === 'fr' ? 'Redimensionner la bibliothèque' : 'Resize component library'" tabindex="0" @pointerdown="startResize($event, 'left')" @keydown="resizeByKeyboard($event, 'left')"><span></span></div>
