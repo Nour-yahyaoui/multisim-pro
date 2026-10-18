@@ -18,25 +18,6 @@ A lightweight, open-source digital logic workbench built with Vue 3. Place logic
 
 Unconnected gate inputs are treated as LOW. The truth-table generator shows the first eight input switches; any additional sources retain their current switch state.
 
-## Run locally
-
-```bash
-npm install
-npm run dev
-```
-
-For a production build and local preview:
-
-```bash
-npm run build
-npm run preview
-```
-
-Run the logic-engine tests with:
-
-```bash
-npm test
-```
 
 ## Keyboard shortcuts
 
