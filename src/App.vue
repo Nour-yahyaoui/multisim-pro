@@ -1168,6 +1168,13 @@ onBeforeUnmount(() => {
     </header>
 
     <div class="main-layout">
+      <button
+        v-if="mobilePanel"
+        type="button"
+        class="mobile-scrim absolute inset-0 z-[15] border-0 bg-slate-950/45 backdrop-blur-[1px] min-[741px]:hidden"
+        :aria-label="t('close')"
+        @click="mobilePanel = ''"
+      ></button>
       <aside v-if="!leftCollapsed" class="palette-panel" :class="{ 'mobile-open': mobilePanel === 'left' }" :style="{ width: `${leftWidth}px` }">
         <div class="panel-heading palette-heading">
           <div>

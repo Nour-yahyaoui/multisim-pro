@@ -15,7 +15,7 @@ A lightweight, open-source digital logic workbench built with Vue 3. Place logic
 - **Light and dark themes:** switch from the top bar; the selected theme is saved locally.
 - **Local-first persistence:** circuits and workspace layout autosave to browser `localStorage`. Export a portable project as JSON.
 - **Workspace controls:** resizable and collapsible component library and inspector; resize, collapse, or expand the truth-table panel fullscreen; zoom, grid snapping, undo/redo, duplicate, delete, and keyboard shortcuts.
-- **Responsive layout:** desktop sidebars and mobile slide-in component/inspector panels.
+- **Responsive layout:** Tailwind CSS powers the mobile drawer backdrop and responsive utilities; custom styles keep touch targets, safe-area padding, and the circuit workspace comfortable on phones.
 
 
 Unconnected gate inputs are treated as LOW. The truth-table generator shows the first eight input switches; any additional sources retain their current switch state.

@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #e8eef6;
@@ -867,4 +869,49 @@ kbd { font-family: 'DM Mono', ui-monospace, monospace; color: #78869a; backgroun
 }
 @media (max-width: 740px) {
   .github-project-link { display: none; }
+}
+
+/* Phone-first fit, safe-area spacing, and touch-friendly drawer actions */
+@media (max-width: 740px) {
+  .app-shell { height: 100dvh; min-height: 0; }
+  .main-layout { min-height: 0; }
+  .topbar { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+  .mobile-panel-toggle { width: 36px; height: 36px; flex: 0 0 36px; }
+  .mobile-scrim { display: block; cursor: pointer; touch-action: manipulation; }
+  .palette-panel, .inspector-panel {
+    height: 100%;
+    max-height: 100%;
+    overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .panel-heading { min-height: 60px; }
+  .mobile-close { width: 34px; height: 34px; }
+  .canvas-toolbar { gap: 3px; }
+  .canvas-region { min-height: 120px; }
+  .truth-panel { max-height: 65vh; }
+  .truth-window-control { width: 34px; height: 34px; }
+}
+@media (max-width: 430px) {
+  .topbar { gap: 4px; padding-left: max(5px, env(safe-area-inset-left)); padding-right: max(5px, env(safe-area-inset-right)); }
+  .mobile-panel-toggle { width: 32px; height: 34px; flex-basis: 32px; }
+  .project-block { max-width: 124px; }
+  .project-name-input { max-width: 112px; min-width: 60px; font-size: 9px; }
+  .top-actions { gap: 3px; }
+  .theme-button { width: 30px; min-width: 30px; height: 32px; }
+  .canvas-toolbar-title { max-width: 110px; overflow: hidden; }
+  .canvas-toolbar-title > span:not(.canvas-live-dot) { overflow: hidden; text-overflow: ellipsis; }
+  .tool-group { margin-left: auto; margin-right: 3px; }
+  .zoom-controls { gap: 0; }
+  .zoom-button { width: 22px; }
+  .help-button { width: 23px; }
+  .truth-header { gap: 5px; }
+  .truth-header-actions { gap: 1px; }
+  .truth-window-control { width: 30px; height: 30px; }
+  .truth-panel.fullscreen .truth-header-actions { gap: 2px; }
+}
+@media (max-height: 620px) and (max-width: 740px) {
+  .topbar { height: 52px; flex-basis: 52px; }
+  .truth-panel { max-height: 55vh; }
+  .truth-panel.fullscreen { max-height: none; }
+  .truth-table td { height: 24px; }
 }
