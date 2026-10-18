@@ -16,6 +16,7 @@ A lightweight, open-source digital logic workbench built with Vue 3. Place logic
 - **Workspace controls:** resizable component library, inspector, and truth-table panel; zoom, grid snapping, undo/redo, duplicate, delete, and keyboard shortcuts.
 - **Responsive layout:** desktop sidebars and mobile slide-in component/inspector panels.
 
+
 Unconnected gate inputs are treated as LOW. The truth-table generator shows the first eight input switches; any additional sources retain their current switch state.
 
 
