@@ -1314,7 +1314,7 @@ onBeforeUnmount(() => {
               <div><h2>{{ t('truthTable') }}</h2><div class="truth-subtitle">{{ truthRows.length }} {{ t('combinations') }}<span class="truth-live-mark"><span></span>{{ language === 'fr' ? 'EN DIRECT' : 'LIVE' }}</span></div></div>
             </div>
             <div class="truth-header-actions">
-              <span class="truth-count-chip"><span>{{ truth.value.inputs.length }}</span>{{ language === 'fr' ? 'entrées' : 'inputs' }}<i></i><span>{{ truth.value.outputs.length }}</span>{{ language === 'fr' ? 'sorties' : 'outputs' }}</span>
+              <span class="truth-count-chip"><span>{{ truth.inputs.length }}</span>{{ language === 'fr' ? 'entrées' : 'inputs' }}<i></i><span>{{ truth.outputs.length }}</span>{{ language === 'fr' ? 'sorties' : 'outputs' }}</span>
               <button class="copy-csv-button" :title="t('copyCsv')" @click="copyTruthTable"><Copy :size="13" /><span>{{ t('copyCsv') }}</span></button>
             </div>
           </div>
@@ -1323,17 +1323,17 @@ onBeforeUnmount(() => {
               <thead>
                 <tr>
                   <th class="row-number-heading">{{ t('row') }}</th>
-                  <th v-for="node in truth.value.inputs" :key="node.id" class="input-heading"><span>{{ node.label }}</span><small>{{ t('input') }}</small></th>
-                  <th v-for="node in truth.value.outputs" :key="node.id" class="output-heading"><span class="output-heading-dot"></span><span>{{ node.label }}</span><small>{{ t('output') }}</small></th>
-                  <th v-if="truth.value.outputs.length === 0" class="empty-output-heading"><span>…</span><small>{{ t('output') }}</small></th>
+                  <th v-for="node in truth.inputs" :key="node.id" class="input-heading"><span>{{ node.label }}</span><small>{{ t('input') }}</small></th>
+                  <th v-for="node in truth.outputs" :key="node.id" class="output-heading"><span class="output-heading-dot"></span><span>{{ node.label }}</span><small>{{ t('output') }}</small></th>
+                  <th v-if="truth.outputs.length === 0" class="empty-output-heading"><span>…</span><small>{{ t('output') }}</small></th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="row in truthRows" :key="row.index" :class="{ 'current-truth-row': currentRowMatches(row) }">
                   <td class="row-number">{{ String(row.index).padStart(2, '0') }}</td>
-                  <td v-for="node in truth.value.inputs" :key="node.id" class="truth-value-cell"><span class="bit-pill" :class="row.inputs[node.id] ? 'bit-high' : 'bit-low'">{{ row.inputs[node.id] ? '1' : '0' }}</span></td>
-                  <td v-for="node in truth.value.outputs" :key="node.id" class="truth-value-cell output-value-cell"><span class="bit-pill" :class="row.outputs[node.id] ? 'bit-high' : 'bit-low'">{{ row.outputs[node.id] ? '1' : '0' }}</span></td>
-                  <td v-if="truth.value.outputs.length === 0" class="no-output-cell"><span>{{ t('noOutputs') }}</span></td>
+                  <td v-for="node in truth.inputs" :key="node.id" class="truth-value-cell"><span class="bit-pill" :class="row.inputs[node.id] ? 'bit-high' : 'bit-low'">{{ row.inputs[node.id] ? '1' : '0' }}</span></td>
+                  <td v-for="node in truth.outputs" :key="node.id" class="truth-value-cell output-value-cell"><span class="bit-pill" :class="row.outputs[node.id] ? 'bit-high' : 'bit-low'">{{ row.outputs[node.id] ? '1' : '0' }}</span></td>
+                  <td v-if="truth.outputs.length === 0" class="no-output-cell"><span>{{ t('noOutputs') }}</span></td>
                 </tr>
               </tbody>
             </table>
