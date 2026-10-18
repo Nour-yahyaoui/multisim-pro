@@ -14,7 +14,7 @@ A lightweight, open-source digital logic workbench built with Vue 3. Place logic
 - **English / French UI:** switch between English and French from the top bar.
 - **Light and dark themes:** switch from the top bar; the selected theme is saved locally.
 - **Local-first persistence:** circuits and workspace layout autosave to browser `localStorage`. Export a portable project as JSON.
-- **Workspace controls:** resizable component library, inspector, and truth-table panel; zoom, grid snapping, undo/redo, duplicate, delete, and keyboard shortcuts.
+- **Workspace controls:** resizable and collapsible component library and inspector; resize the truth-table panel; zoom, grid snapping, undo/redo, duplicate, delete, and keyboard shortcuts.
 - **Responsive layout:** desktop sidebars and mobile slide-in component/inspector panels.
 
 

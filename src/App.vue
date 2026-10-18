@@ -16,6 +16,10 @@ import {
   Minus,
   Moon,
   MousePointer2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   Play,
   Plus,
   Redo2,
@@ -53,6 +57,10 @@ const strings = {
     newCircuit: 'New circuit',
     exportProject: 'Export project',
     language: 'Switch language',
+    showComponents: 'Show component library',
+    hideComponents: 'Collapse component library',
+    showInspector: 'Show inspector',
+    hideInspector: 'Collapse inspector',
     themeLight: 'Switch to light mode',
     themeDark: 'Switch to dark mode',
     running: 'Simulation running',
@@ -163,6 +171,10 @@ const strings = {
     newCircuit: 'Nouveau circuit',
     exportProject: 'Exporter le projet',
     language: 'Changer de langue',
+    showComponents: 'Afficher la bibliothèque',
+    hideComponents: 'Masquer la bibliothèque',
+    showInspector: 'Afficher l’inspecteur',
+    hideInspector: 'Masquer l’inspecteur',
     themeLight: 'Passer en mode clair',
     themeDark: 'Passer en mode sombre',
     running: 'Simulation active',
@@ -268,6 +280,8 @@ const strings = {
 
 const language = ref('en')
 const theme = ref('dark')
+const leftCollapsed = ref(false)
+const rightCollapsed = ref(false)
 const nodes = ref(DEFAULT_DEMO.nodes.map((node) => ({ ...node })))
 const wires = ref(DEFAULT_DEMO.wires.map((wire) => ({ ...wire })))
 const projectName = ref(DEFAULT_DEMO.projectName)
@@ -715,6 +729,12 @@ function toggleTheme() {
   applyThemeToDocument()
 }
 
+function toggleSidebar(side) {
+  if (side === 'left') leftCollapsed.value = !leftCollapsed.value
+  if (side === 'right') rightCollapsed.value = !rightCollapsed.value
+  mobilePanel.value = ''
+}
+
 function toggleSimulation() {
   isRunning.value = !isRunning.value
 }
@@ -763,6 +783,8 @@ function sanitizeLoadedState(data) {
     projectName: String(data.projectName || 'Untitled circuit').slice(0, 80),
     language: data.language === 'fr' ? 'fr' : 'en',
     theme: data.theme === 'light' ? 'light' : 'dark',
+    leftCollapsed: Boolean(data.leftCollapsed),
+    rightCollapsed: Boolean(data.rightCollapsed),
     leftWidth: Number.isFinite(data.leftWidth) ? Math.max(210, Math.min(370, data.leftWidth)) : 260,
     rightWidth: Number.isFinite(data.rightWidth) ? Math.max(230, Math.min(400, data.rightWidth)) : 278,
     truthHeight: Number.isFinite(data.truthHeight) ? Math.max(145, Math.min(360, data.truthHeight)) : 232,
@@ -779,6 +801,8 @@ function savePayload() {
     projectName: projectName.value,
     language: language.value,
     theme: theme.value,
+    leftCollapsed: leftCollapsed.value,
+    rightCollapsed: rightCollapsed.value,
     leftWidth: leftWidth.value,
     rightWidth: rightWidth.value,
     truthHeight: truthHeight.value,
@@ -962,6 +986,8 @@ function restoreFromStorage() {
     projectName.value = parsed.projectName
     language.value = parsed.language
     theme.value = parsed.theme
+    leftCollapsed.value = parsed.leftCollapsed
+    rightCollapsed.value = parsed.rightCollapsed
     leftWidth.value = parsed.leftWidth
     rightWidth.value = parsed.rightWidth
     truthHeight.value = parsed.truthHeight
@@ -1009,7 +1035,10 @@ function updateCanvasSize() {
 }
 
 function openMobilePanel(panel) {
-  mobilePanel.value = mobilePanel.value === panel ? '' : panel
+  const closing = mobilePanel.value === panel
+  if (!closing && panel === 'left') leftCollapsed.value = false
+  if (!closing && panel === 'right') rightCollapsed.value = false
+  mobilePanel.value = closing ? '' : panel
 }
 
 onMounted(async () => {
@@ -1097,13 +1126,16 @@ onBeforeUnmount(() => {
     </header>
 
     <div class="main-layout">
-      <aside class="palette-panel" :class="{ 'mobile-open': mobilePanel === 'left' }" :style="{ width: `${leftWidth}px` }">
+      <aside v-if="!leftCollapsed" class="palette-panel" :class="{ 'mobile-open': mobilePanel === 'left' }" :style="{ width: `${leftWidth}px` }">
         <div class="panel-heading palette-heading">
           <div>
             <div class="panel-title">{{ t('components') }}</div>
             <div class="panel-subtitle">{{ componentCatalog.length }} {{ language === 'fr' ? 'éléments' : 'parts' }} <span class="heading-dot"></span> {{ language === 'fr' ? 'glisser-déposer' : 'drag & drop' }}</div>
           </div>
-          <button class="small-icon-button mobile-close" :aria-label="t('close')" @click="mobilePanel = ''"><X :size="15" /></button>
+          <div class="panel-heading-actions">
+            <button class="small-icon-button panel-collapse-button" :title="t('hideComponents')" :aria-label="t('hideComponents')" @click="toggleSidebar('left')"><PanelLeftClose :size="15" /></button>
+            <button class="small-icon-button mobile-close" :aria-label="t('close')" @click="mobilePanel = ''"><X :size="15" /></button>
+          </div>
         </div>
         <label class="search-field">
           <Search :size="15" />
@@ -1180,7 +1212,7 @@ onBeforeUnmount(() => {
         <div class="palette-footer"><span class="footer-mini-mark"><CircuitBoard :size="13" /></span><span>LOGIC LAB</span><span class="footer-version">v2.0.3</span></div>
       </aside>
 
-      <div class="vertical-resizer left-resizer" role="separator" aria-orientation="vertical" :aria-label="language === 'fr' ? 'Redimensionner la bibliothèque' : 'Resize component library'" tabindex="0" @pointerdown="startResize($event, 'left')" @keydown="resizeByKeyboard($event, 'left')"><span></span></div>
+      <div v-if="!leftCollapsed" class="vertical-resizer left-resizer" role="separator" aria-orientation="vertical" :aria-label="language === 'fr' ? 'Redimensionner la bibliothèque' : 'Resize component library'" tabindex="0" @pointerdown="startResize($event, 'left')" @keydown="resizeByKeyboard($event, 'left')"><span></span></div>
 
       <main class="workbench">
         <div class="canvas-toolbar">
@@ -1199,6 +1231,14 @@ onBeforeUnmount(() => {
             </button>
             <span class="tool-separator"></span>
             <button class="tool-button snap-button" :class="{ active: snapToGrid }" :title="t('snap')" :aria-label="t('snap')" @click="snapToGrid = !snapToGrid"><span class="snap-glyph">⌗</span></button>
+          </div>
+          <div class="layout-toggle-group">
+            <button class="layout-toggle-button" :class="{ active: !leftCollapsed }" :title="t(leftCollapsed ? 'showComponents' : 'hideComponents')" :aria-label="t(leftCollapsed ? 'showComponents' : 'hideComponents')" :aria-expanded="!leftCollapsed" @click="toggleSidebar('left')">
+              <PanelLeftOpen v-if="leftCollapsed" :size="15" /><PanelLeftClose v-else :size="15" />
+            </button>
+            <button class="layout-toggle-button" :class="{ active: !rightCollapsed }" :title="t(rightCollapsed ? 'showInspector' : 'hideInspector')" :aria-label="t(rightCollapsed ? 'showInspector' : 'hideInspector')" :aria-expanded="!rightCollapsed" @click="toggleSidebar('right')">
+              <PanelRightOpen v-if="rightCollapsed" :size="15" /><PanelRightClose v-else :size="15" />
+            </button>
           </div>
           <div class="zoom-controls">
             <button class="zoom-button" :title="t('zoomOut')" :aria-label="t('zoomOut')" :disabled="zoom <= 0.65" @click="changeZoom(-0.1)"><Minus :size="13" /></button>
@@ -1369,12 +1409,15 @@ onBeforeUnmount(() => {
         </section>
       </main>
 
-      <div class="vertical-resizer right-resizer" role="separator" aria-orientation="vertical" :aria-label="language === 'fr' ? 'Redimensionner l’inspecteur' : 'Resize inspector'" tabindex="0" @pointerdown="startResize($event, 'right')" @keydown="resizeByKeyboard($event, 'right')"><span></span></div>
+      <div v-if="!rightCollapsed" class="vertical-resizer right-resizer" role="separator" aria-orientation="vertical" :aria-label="language === 'fr' ? 'Redimensionner l’inspecteur' : 'Resize inspector'" tabindex="0" @pointerdown="startResize($event, 'right')" @keydown="resizeByKeyboard($event, 'right')"><span></span></div>
 
-      <aside class="inspector-panel" :class="{ 'mobile-open': mobilePanel === 'right' }" :style="{ width: `${rightWidth}px` }">
+      <aside v-if="!rightCollapsed" class="inspector-panel" :class="{ 'mobile-open': mobilePanel === 'right' }" :style="{ width: `${rightWidth}px` }">
         <div class="panel-heading inspector-heading">
           <div><div class="panel-title">{{ t('properties') }}</div><div class="panel-subtitle">{{ selectedNode ? selectedNode.label : t('inspect') }}</div></div>
-          <button class="small-icon-button mobile-close" :aria-label="t('close')" @click="mobilePanel = ''"><X :size="15" /></button>
+          <div class="panel-heading-actions">
+            <button class="small-icon-button panel-collapse-button" :title="t('hideInspector')" :aria-label="t('hideInspector')" @click="toggleSidebar('right')"><PanelRightClose :size="15" /></button>
+            <button class="small-icon-button mobile-close" :aria-label="t('close')" @click="mobilePanel = ''"><X :size="15" /></button>
+          </div>
         </div>
         <div v-if="selectedNode" class="inspector-scroll">
           <div class="selected-component-card">

@@ -756,3 +756,30 @@ kbd { font-family: 'DM Mono', ui-monospace, monospace; color: #78869a; backgroun
 @media (max-width: 430px) {
   .theme-button { width: 29px; min-width: 29px; height: 31px; }
 }
+
+/* Persistent sidebar toggles */
+.panel-heading-actions { display: flex; align-items: center; gap: 3px; }
+.panel-collapse-button { color: #73839a; }
+.panel-collapse-button:hover { color: #dce6f2; background: rgba(255,255,255,.06); }
+.layout-toggle-group { display: flex; align-items: center; gap: 2px; padding: 3px; margin-right: 10px; background: #101927; border: 1px solid rgba(142,163,190,.12); border-radius: 8px; }
+.layout-toggle-button { width: 27px; height: 26px; display: grid; place-items: center; color: #74849a; background: transparent; border: 0; border-radius: 5px; cursor: pointer; transition: color .15s, background .15s; }
+.layout-toggle-button:hover { color: #e4ecf5; background: rgba(255,255,255,.06); }
+.layout-toggle-button.active { color: #8ca8cd; }
+
+.theme-light .panel-collapse-button { color: #728197; }
+.theme-light .panel-collapse-button:hover { color: #33475e; background: rgba(51,73,103,.07); }
+.theme-light .layout-toggle-group { background: #f2f6fa; border-color: rgba(37,56,80,.13); }
+.theme-light .layout-toggle-button { color: #78899e; }
+.theme-light .layout-toggle-button:hover { color: #2f4359; background: rgba(49,72,101,.07); }
+.theme-light .layout-toggle-button.active { color: #398d7c; }
+
+@media (max-width: 1180px) {
+  .layout-toggle-group { margin-right: 6px; }
+  .theme-button { width: 32px; min-width: 32px; padding: 0; }
+  .theme-button span { display: none; }
+}
+@media (max-width: 740px) {
+  .layout-toggle-group { display: none; }
+  .panel-collapse-button { display: none !important; }
+  .panel-heading-actions { gap: 2px; }
+}
