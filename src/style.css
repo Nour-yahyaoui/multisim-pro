@@ -252,7 +252,7 @@ kbd { font-family: 'DM Mono', ui-monospace, monospace; color: #78869a; backgroun
 .horizontal-resizer { height: 6px; flex: 0 0 6px; position: relative; z-index: 4; cursor: row-resize; background: #0a111b; border-top: 1px solid rgba(145,165,192,.08); border-bottom: 1px solid rgba(145,165,192,.05); }
 .horizontal-resizer span { position: absolute; left: 50%; top: 2px; width: 35px; height: 2px; transform: translateX(-50%); border-radius: 3px; background: #344457; transition: background .15s, width .15s; }
 .horizontal-resizer:hover span, .horizontal-resizer:focus-visible span { background: #76d9c3; width: 48px; }
-.truth-panel { flex: 0 0 auto; min-height: 145px; max-height: 52vh; display: flex; flex-direction: column; background: #0c131f; overflow: hidden; }
+.truth-panel { flex: 0 0 auto; min-height: 145px; max-height: 70vh; display: flex; flex-direction: column; background: #0c131f; overflow: hidden; }
 .truth-header { min-height: 55px; flex: 0 0 55px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 17px; border-bottom: 1px solid var(--line); }
 .truth-heading-copy { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .truth-icon { width: 29px; height: 29px; display: grid; place-items: center; color: #86b3ff; background: rgba(102,148,224,.12); border: 1px solid rgba(102,148,224,.16); border-radius: 8px; }
@@ -782,4 +782,47 @@ kbd { font-family: 'DM Mono', ui-monospace, monospace; color: #78869a; backgroun
   .layout-toggle-group { display: none; }
   .panel-collapse-button { display: none !important; }
   .panel-heading-actions { gap: 2px; }
+}
+
+/* Truth-table dock: resize, collapse, and fullscreen */
+.truth-window-control {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  color: #8191a6;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.truth-window-control:hover { color: #e5edf6; background: rgba(255,255,255,.06); border-color: rgba(142,162,189,.15); }
+.truth-panel.collapsed { height: 42px !important; min-height: 42px; max-height: 42px; }
+.truth-panel.collapsed .truth-header { height: 42px; min-height: 42px; flex-basis: 42px; }
+.truth-panel.collapsed .truth-icon { width: 26px; height: 26px; }
+.truth-panel.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100vw;
+  height: 100dvh !important;
+  min-height: 100dvh;
+  max-height: none;
+  border: 1px solid rgba(142,162,189,.2);
+  box-shadow: 0 0 0 100vmax rgba(3,8,14,.72);
+}
+.truth-panel.fullscreen .truth-header { min-height: 62px; flex-basis: 62px; padding-left: 24px; padding-right: 24px; }
+.truth-panel.fullscreen .truth-table-wrap { max-height: none; }
+.truth-panel.fullscreen .truth-table th { height: 44px; }
+.truth-panel.fullscreen .truth-table td { height: 38px; }
+.truth-panel.fullscreen .truth-window-control { width: 34px; height: 34px; }
+.theme-light .truth-window-control { color: #6e8095; }
+.theme-light .truth-window-control:hover { color: #2d4158; background: rgba(49,72,101,.06); border-color: rgba(37,56,80,.13); }
+.theme-light .truth-panel.fullscreen { border-color: rgba(37,56,80,.16); box-shadow: 0 0 0 100vmax rgba(30,46,64,.4); }
+.is-resizing-col, .is-resizing-col * { cursor: col-resize !important; user-select: none !important; }
+.is-resizing-row, .is-resizing-row * { cursor: row-resize !important; user-select: none !important; }
+@media (max-width: 740px) {
+  .truth-panel.fullscreen .truth-header { padding-left: 12px; padding-right: 12px; }
+  .truth-panel.fullscreen .truth-count-chip { display: none; }
 }

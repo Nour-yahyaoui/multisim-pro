@@ -13,9 +13,13 @@ import {
   FilePlus2,
   Globe2,
   Lightbulb,
+  Maximize2,
+  Minimize2,
   Minus,
   Moon,
   MousePointer2,
+  PanelBottomClose,
+  PanelBottomOpen,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
@@ -117,6 +121,10 @@ const strings = {
     truthTable: 'Truth table',
     combinations: 'combinations',
     copyCsv: 'Copy CSV',
+    showTruthTable: 'Show truth table',
+    hideTruthTable: 'Collapse truth table',
+    fullScreenTruth: 'Expand truth table fullscreen',
+    exitFullScreenTruth: 'Exit fullscreen truth table',
     row: 'ROW',
     input: 'INPUT',
     output: 'OUTPUT',
@@ -231,6 +239,10 @@ const strings = {
     truthTable: 'Tableau de vérité',
     combinations: 'combinaisons',
     copyCsv: 'Copier CSV',
+    showTruthTable: 'Afficher le tableau de vérité',
+    hideTruthTable: 'Masquer le tableau de vérité',
+    fullScreenTruth: 'Afficher le tableau de vérité en plein écran',
+    exitFullScreenTruth: 'Quitter le plein écran du tableau',
     row: 'LIGNE',
     input: 'ENTRÉE',
     output: 'SORTIE',
@@ -282,6 +294,8 @@ const language = ref('en')
 const theme = ref('dark')
 const leftCollapsed = ref(false)
 const rightCollapsed = ref(false)
+const truthCollapsed = ref(false)
+const truthFullscreen = ref(false)
 const nodes = ref(DEFAULT_DEMO.nodes.map((node) => ({ ...node })))
 const wires = ref(DEFAULT_DEMO.wires.map((wire) => ({ ...wire })))
 const projectName = ref(DEFAULT_DEMO.projectName)
@@ -324,6 +338,7 @@ const truthRows = computed(() => truth.value.rows)
 const viewWidth = computed(() => Math.max(1, canvasSize.value.width / zoom.value))
 const viewHeight = computed(() => Math.max(1, canvasSize.value.height / zoom.value))
 const viewBox = computed(() => `0 0 ${viewWidth.value} ${viewHeight.value}`)
+const truthPanelStyle = computed(() => ({ height: truthCollapsed.value ? '42px' : truthFullscreen.value ? '100dvh' : `${truthHeight.value}px` }))
 const zoomLabel = computed(() => `${Math.round(zoom.value * 100)}%`)
 const workspaceComponentCount = computed(() => nodes.value.length)
 const inputNodes = computed(() => nodes.value.filter((node) => node.type === 'INPUT'))
@@ -735,6 +750,17 @@ function toggleSidebar(side) {
   mobilePanel.value = ''
 }
 
+function toggleTruthPanel() {
+  if (truthFullscreen.value) truthFullscreen.value = false
+  truthCollapsed.value = !truthCollapsed.value
+  mobilePanel.value = ''
+}
+
+function toggleTruthFullscreen() {
+  truthFullscreen.value = !truthFullscreen.value
+  if (truthFullscreen.value) truthCollapsed.value = false
+}
+
 function toggleSimulation() {
   isRunning.value = !isRunning.value
 }
@@ -785,9 +811,10 @@ function sanitizeLoadedState(data) {
     theme: data.theme === 'light' ? 'light' : 'dark',
     leftCollapsed: Boolean(data.leftCollapsed),
     rightCollapsed: Boolean(data.rightCollapsed),
+    truthCollapsed: Boolean(data.truthCollapsed),
     leftWidth: Number.isFinite(data.leftWidth) ? Math.max(210, Math.min(370, data.leftWidth)) : 260,
     rightWidth: Number.isFinite(data.rightWidth) ? Math.max(230, Math.min(400, data.rightWidth)) : 278,
-    truthHeight: Number.isFinite(data.truthHeight) ? Math.max(145, Math.min(360, data.truthHeight)) : 232,
+    truthHeight: Number.isFinite(data.truthHeight) ? Math.max(145, Math.min(720, data.truthHeight)) : 232,
     snapToGrid: data.snapToGrid !== false,
     zoom: Number.isFinite(data.zoom) ? Math.max(0.65, Math.min(1.55, data.zoom)) : 1,
   }
@@ -803,6 +830,7 @@ function savePayload() {
     theme: theme.value,
     leftCollapsed: leftCollapsed.value,
     rightCollapsed: rightCollapsed.value,
+    truthCollapsed: truthCollapsed.value,
     leftWidth: leftWidth.value,
     rightWidth: rightWidth.value,
     truthHeight: truthHeight.value,
@@ -901,6 +929,10 @@ function currentRowMatches(row) {
   return truth.value.inputs.every((node) => Boolean(row.inputs[node.id]) === Boolean(node.value))
 }
 
+function maxTruthHeight() {
+  return Math.max(145, Math.min(720, Math.round(window.innerHeight * 0.7)))
+}
+
 function startResize(event, kind) {
   if (event.button !== 0) return
   event.preventDefault()
@@ -914,7 +946,7 @@ function startResize(event, kind) {
   }
   window.addEventListener('pointermove', handleResizeMove)
   window.addEventListener('pointerup', stopResize, { once: true })
-  document.body.classList.add('is-resizing')
+  document.body.classList.add(kind === 'truth' ? 'is-resizing-row' : 'is-resizing-col')
 }
 
 function handleResizeMove(event) {
@@ -922,12 +954,12 @@ function handleResizeMove(event) {
   const { kind, startX, startY } = resizeState.value
   if (kind === 'left') leftWidth.value = Math.max(210, Math.min(370, resizeState.value.left + event.clientX - startX))
   if (kind === 'right') rightWidth.value = Math.max(230, Math.min(400, resizeState.value.right + startX - event.clientX))
-  if (kind === 'truth') truthHeight.value = Math.max(145, Math.min(Math.round(window.innerHeight * 0.52), resizeState.value.truth + startY - event.clientY))
+  if (kind === 'truth') truthHeight.value = Math.max(145, Math.min(maxTruthHeight(), resizeState.value.truth + startY - event.clientY))
 }
 
 function stopResize() {
   window.removeEventListener('pointermove', handleResizeMove)
-  document.body.classList.remove('is-resizing')
+  document.body.classList.remove('is-resizing-row', 'is-resizing-col')
   resizeState.value = null
 }
 
@@ -937,7 +969,7 @@ function resizeByKeyboard(event, kind) {
   const amount = event.shiftKey ? 24 : 8
   if (kind === 'left') leftWidth.value = Math.max(210, Math.min(370, leftWidth.value + (event.key === 'ArrowRight' ? amount : -amount)))
   if (kind === 'right') rightWidth.value = Math.max(230, Math.min(400, rightWidth.value + (event.key === 'ArrowLeft' ? amount : -amount)))
-  if (kind === 'truth') truthHeight.value = Math.max(145, Math.min(360, truthHeight.value + (event.key === 'ArrowUp' ? amount : -amount)))
+  if (kind === 'truth') truthHeight.value = Math.max(145, Math.min(maxTruthHeight(), truthHeight.value + (event.key === 'ArrowUp' ? amount : -amount)))
 }
 
 function onGlobalKeydown(event) {
@@ -963,6 +995,7 @@ function onGlobalKeydown(event) {
   if (event.key === 'Escape') {
     wireStart.value = null
     toolMode.value = 'select'
+    truthFullscreen.value = false
     showHelp.value = false
     mobilePanel.value = ''
     return
@@ -988,6 +1021,7 @@ function restoreFromStorage() {
     theme.value = parsed.theme
     leftCollapsed.value = parsed.leftCollapsed
     rightCollapsed.value = parsed.rightCollapsed
+    truthCollapsed.value = parsed.truthCollapsed
     leftWidth.value = parsed.leftWidth
     rightWidth.value = parsed.rightWidth
     truthHeight.value = parsed.truthHeight
@@ -1239,6 +1273,9 @@ onBeforeUnmount(() => {
             <button class="layout-toggle-button" :class="{ active: !rightCollapsed }" :title="t(rightCollapsed ? 'showInspector' : 'hideInspector')" :aria-label="t(rightCollapsed ? 'showInspector' : 'hideInspector')" :aria-expanded="!rightCollapsed" @click="toggleSidebar('right')">
               <PanelRightOpen v-if="rightCollapsed" :size="15" /><PanelRightClose v-else :size="15" />
             </button>
+            <button class="layout-toggle-button bottom-toggle" :class="{ active: !truthCollapsed }" :title="t(truthCollapsed ? 'showTruthTable' : 'hideTruthTable')" :aria-label="t(truthCollapsed ? 'showTruthTable' : 'hideTruthTable')" :aria-expanded="!truthCollapsed" @click="toggleTruthPanel">
+              <PanelBottomOpen v-if="truthCollapsed" :size="15" /><PanelBottomClose v-else :size="15" />
+            </button>
           </div>
           <div class="zoom-controls">
             <button class="zoom-button" :title="t('zoomOut')" :aria-label="t('zoomOut')" :disabled="zoom <= 0.65" @click="changeZoom(-0.1)"><Minus :size="13" /></button>
@@ -1372,21 +1409,28 @@ onBeforeUnmount(() => {
           <div v-if="wireStart" class="wire-cursor-help"><span></span>{{ t('startWire') }}</div>
         </div>
 
-        <div class="horizontal-resizer" role="separator" aria-orientation="horizontal" :aria-label="language === 'fr' ? 'Redimensionner le tableau de vérité' : 'Resize truth table'" tabindex="0" @pointerdown="startResize($event, 'truth')" @keydown="resizeByKeyboard($event, 'truth')"><span></span></div>
+        <div v-if="!truthCollapsed && !truthFullscreen" class="horizontal-resizer" role="separator" aria-orientation="horizontal" :aria-label="language === 'fr' ? 'Redimensionner le tableau de vérité' : 'Resize truth table'" tabindex="0" @pointerdown="startResize($event, 'truth')" @keydown="resizeByKeyboard($event, 'truth')"><span></span></div>
 
-        <section class="truth-panel" :style="{ height: `${truthHeight}px` }">
+        <section class="truth-panel" :class="{ collapsed: truthCollapsed, fullscreen: truthFullscreen }" :style="truthPanelStyle">
           <div class="truth-header">
             <div class="truth-heading-copy">
               <div class="truth-icon"><Activity :size="16" /></div>
               <div><h2>{{ t('truthTable') }}</h2><div class="truth-subtitle">{{ truthRows.length }} {{ t('combinations') }}<span class="truth-live-mark"><span></span>{{ language === 'fr' ? 'EN DIRECT' : 'LIVE' }}</span></div></div>
             </div>
             <div class="truth-header-actions">
-              <span class="truth-count-chip"><span>{{ truth.inputs.length }}</span>{{ language === 'fr' ? 'entrées' : 'inputs' }}<i></i><span>{{ truth.outputs.length }}</span>{{ language === 'fr' ? 'sorties' : 'outputs' }}</span>
-              <button class="copy-csv-button" :title="t('copyCsv')" @click="copyTruthTable"><Copy :size="13" /><span>{{ t('copyCsv') }}</span></button>
+              <span v-if="!truthCollapsed" class="truth-count-chip"><span>{{ truth.inputs.length }}</span>{{ language === 'fr' ? 'entrées' : 'inputs' }}<i></i><span>{{ truth.outputs.length }}</span>{{ language === 'fr' ? 'sorties' : 'outputs' }}</span>
+              <button v-if="!truthCollapsed" class="copy-csv-button" :title="t('copyCsv')" @click="copyTruthTable"><Copy :size="13" /><span>{{ t('copyCsv') }}</span></button>
+              <button class="truth-window-control" :title="t(truthFullscreen ? 'exitFullScreenTruth' : 'fullScreenTruth')" :aria-label="t(truthFullscreen ? 'exitFullScreenTruth' : 'fullScreenTruth')" @click="toggleTruthFullscreen">
+                <Minimize2 v-if="truthFullscreen" :size="15" /><Maximize2 v-else :size="15" />
+              </button>
+              <button class="truth-window-control" :title="t(truthCollapsed ? 'showTruthTable' : 'hideTruthTable')" :aria-label="t(truthCollapsed ? 'showTruthTable' : 'hideTruthTable')" @click="toggleTruthPanel">
+                <PanelBottomOpen v-if="truthCollapsed" :size="15" /><PanelBottomClose v-else :size="15" />
+              </button>
             </div>
           </div>
-          <div class="truth-table-wrap">
-            <table class="truth-table">
+          <template v-if="!truthCollapsed">
+            <div class="truth-table-wrap">
+              <table class="truth-table">
               <thead>
                 <tr>
                   <th class="row-number-heading">{{ t('row') }}</th>
@@ -1405,7 +1449,8 @@ onBeforeUnmount(() => {
               </tbody>
             </table>
           </div>
-          <div v-if="truth.omittedInputs" class="truth-warning"><span>i</span>{{ t('tableLimit') }}</div>
+            <div v-if="truth.omittedInputs" class="truth-warning"><span>i</span>{{ t('tableLimit') }}</div>
+          </template>
         </section>
       </main>
 
