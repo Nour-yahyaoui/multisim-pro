@@ -12,6 +12,7 @@ A lightweight, open-source digital logic workbench built with Vue 3. Place logic
 - **Live logic simulation:** toggle an input and immediately see active wires, LED state, and the matching truth-table row update.
 - **Truth table:** generated from the circuit, with up to eight input variables; copy results as CSV.
 - **English / French UI:** switch between English and French from the top bar.
+- **Light and dark themes:** switch from the top bar; the selected theme is saved locally.
 - **Local-first persistence:** circuits and workspace layout autosave to browser `localStorage`. Export a portable project as JSON.
 - **Workspace controls:** resizable component library, inspector, and truth-table panel; zoom, grid snapping, undo/redo, duplicate, delete, and keyboard shortcuts.
 - **Responsive layout:** desktop sidebars and mobile slide-in component/inspector panels.

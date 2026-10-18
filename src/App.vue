@@ -14,6 +14,7 @@ import {
   Globe2,
   Lightbulb,
   Minus,
+  Moon,
   MousePointer2,
   Play,
   Plus,
@@ -21,6 +22,7 @@ import {
   Search,
   Settings2,
   Square,
+  Sun,
   Trash2,
   Undo2,
   X,
@@ -51,6 +53,8 @@ const strings = {
     newCircuit: 'New circuit',
     exportProject: 'Export project',
     language: 'Switch language',
+    themeLight: 'Switch to light mode',
+    themeDark: 'Switch to dark mode',
     running: 'Simulation running',
     stopped: 'Simulation paused',
     simulate: 'Run simulation',
@@ -159,6 +163,8 @@ const strings = {
     newCircuit: 'Nouveau circuit',
     exportProject: 'Exporter le projet',
     language: 'Changer de langue',
+    themeLight: 'Passer en mode clair',
+    themeDark: 'Passer en mode sombre',
     running: 'Simulation active',
     stopped: 'Simulation en pause',
     simulate: 'Lancer la simulation',
@@ -261,6 +267,7 @@ const strings = {
 }
 
 const language = ref('en')
+const theme = ref('dark')
 const nodes = ref(DEFAULT_DEMO.nodes.map((node) => ({ ...node })))
 const wires = ref(DEFAULT_DEMO.wires.map((wire) => ({ ...wire })))
 const projectName = ref(DEFAULT_DEMO.projectName)
@@ -697,6 +704,17 @@ function toggleLanguage() {
   document.documentElement.lang = language.value
 }
 
+function applyThemeToDocument() {
+  document.documentElement.style.colorScheme = theme.value
+  const themeMeta = document.querySelector('meta[name="theme-color"]')
+  if (themeMeta) themeMeta.setAttribute('content', theme.value === 'light' ? '#f2f5f9' : '#080d16')
+}
+
+function toggleTheme() {
+  theme.value = theme.value === 'dark' ? 'light' : 'dark'
+  applyThemeToDocument()
+}
+
 function toggleSimulation() {
   isRunning.value = !isRunning.value
 }
@@ -744,6 +762,7 @@ function sanitizeLoadedState(data) {
     wires: validWires,
     projectName: String(data.projectName || 'Untitled circuit').slice(0, 80),
     language: data.language === 'fr' ? 'fr' : 'en',
+    theme: data.theme === 'light' ? 'light' : 'dark',
     leftWidth: Number.isFinite(data.leftWidth) ? Math.max(210, Math.min(370, data.leftWidth)) : 260,
     rightWidth: Number.isFinite(data.rightWidth) ? Math.max(230, Math.min(400, data.rightWidth)) : 278,
     truthHeight: Number.isFinite(data.truthHeight) ? Math.max(145, Math.min(360, data.truthHeight)) : 232,
@@ -759,6 +778,7 @@ function savePayload() {
     wires: wires.value,
     projectName: projectName.value,
     language: language.value,
+    theme: theme.value,
     leftWidth: leftWidth.value,
     rightWidth: rightWidth.value,
     truthHeight: truthHeight.value,
@@ -941,6 +961,7 @@ function restoreFromStorage() {
     wires.value = parsed.wires
     projectName.value = parsed.projectName
     language.value = parsed.language
+    theme.value = parsed.theme
     leftWidth.value = parsed.leftWidth
     rightWidth.value = parsed.rightWidth
     truthHeight.value = parsed.truthHeight
@@ -994,6 +1015,7 @@ function openMobilePanel(panel) {
 onMounted(async () => {
   const restored = restoreFromStorage()
   document.documentElement.lang = language.value
+  applyThemeToDocument()
   await nextTick()
   updateCanvasSize()
   if (!restored) fitDemoToCanvas()
@@ -1018,7 +1040,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="app-shell" :class="[`lang-${language}`, { 'wire-mode': wireStart || toolMode === 'wire' }]">
+  <div class="app-shell" :class="[`lang-${language}`, { 'wire-mode': wireStart || toolMode === 'wire', 'theme-light': theme === 'light' }]">
     <header class="topbar">
       <button class="mobile-panel-toggle" :aria-label="t('components')" @click="openMobilePanel('left')">
         <CircuitBoard :size="17" />
@@ -1056,6 +1078,9 @@ onBeforeUnmount(() => {
         </button>
         <button class="icon-button export-button" :title="t('exportProject')" :aria-label="t('exportProject')" @click="exportProject">
           <Download :size="16" />
+        </button>
+        <button class="theme-button" :title="t(theme === 'dark' ? 'themeLight' : 'themeDark')" :aria-label="t(theme === 'dark' ? 'themeLight' : 'themeDark')" @click="toggleTheme">
+          <Sun v-if="theme === 'dark'" :size="15" /><Moon v-else :size="15" /><span>{{ theme === 'dark' ? (language === 'fr' ? 'Clair' : 'Light') : (language === 'fr' ? 'Sombre' : 'Dark') }}</span>
         </button>
         <button class="language-button" :title="t('language')" @click="toggleLanguage">
           <Globe2 :size="15" /><span>{{ language === 'en' ? 'EN' : 'FR' }}</span><ChevronRight :size="12" class="language-chevron" />
