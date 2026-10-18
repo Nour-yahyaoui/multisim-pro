@@ -826,3 +826,45 @@ kbd { font-family: 'DM Mono', ui-monospace, monospace; color: #78869a; backgroun
   .truth-panel.fullscreen .truth-header { padding-left: 12px; padding-right: 12px; }
   .truth-panel.fullscreen .truth-count-chip { display: none; }
 }
+
+/* Prominent creator and repository links */
+.github-project-link {
+  min-width: 0;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  color: #8a9bb1;
+  background: #111a28;
+  border: 1px solid rgba(142,162,189,.14);
+  border-radius: 7px;
+  text-decoration: none;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.github-project-link > svg:first-child { color: #7dd8c3; flex: 0 0 auto; }
+.github-project-link > svg:last-child { color: #65768b; flex: 0 0 auto; }
+.github-project-link:hover { color: #e6edf5; background: #172436; border-color: rgba(115,222,199,.28); }
+.github-project-copy { min-width: 0; display: flex; flex-direction: column; gap: 2px; white-space: nowrap; }
+.github-project-copy strong { color: #dce5ef; font-size: 8px; font-weight: 700; }
+.github-project-copy small { color: #8292a6; font-size: 7px; }
+.palette-credit-link { min-width: 0; display: inline-flex; align-items: center; gap: 6px; color: #8090a4; text-decoration: none; font-size: 8px; font-weight: 600; letter-spacing: .01em; white-space: nowrap; }
+.palette-credit-link:hover { color: #bde9dd; }
+.palette-credit-link .footer-mini-mark { flex: 0 0 auto; }
+.palette-credit-link > svg:last-child { color: #687b92; flex: 0 0 auto; }
+.theme-light .github-project-link { color: #586d84; background: #f4f7fa; border-color: rgba(37,56,80,.14); }
+.theme-light .github-project-link > svg:first-child { color: #358d7b; }
+.theme-light .github-project-link > svg:last-child { color: #8291a3; }
+.theme-light .github-project-link:hover { color: #263b52; background: #e9f3f0; border-color: rgba(49,140,120,.3); }
+.theme-light .github-project-copy strong { color: #30445b; }
+.theme-light .github-project-copy small { color: #73869b; }
+.theme-light .palette-credit-link { color: #687b90; }
+.theme-light .palette-credit-link:hover { color: #267c68; }
+.theme-light .palette-credit-link > svg:last-child { color: #8192a6; }
+@media (max-width: 1180px) {
+  .github-project-copy small { display: none; }
+  .github-project-link { gap: 5px; padding: 0 7px; }
+}
+@media (max-width: 740px) {
+  .github-project-link { display: none; }
+}

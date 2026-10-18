@@ -11,6 +11,7 @@ import {
   Download,
   ExternalLink,
   FilePlus2,
+  GitBranch,
   Globe2,
   Lightbulb,
   Maximize2,
@@ -116,6 +117,7 @@ const strings = {
     tipWire: 'Click a pin on the right, then a pin on the left to wire.',
     tipToggle: 'Click an input switch to toggle its logic state.',
     openSource: 'OPEN SOURCE',
+    openSourceCredit: 'Open-source project by Nour Yahyaoui — view it on GitHub',
     notHint: 'Inverter: output is the opposite of the input',
     by: 'Designed by',
     truthTable: 'Truth table',
@@ -234,6 +236,7 @@ const strings = {
     tipWire: 'Cliquez sur une sortie à droite, puis sur une entrée à gauche.',
     tipToggle: 'Cliquez sur un interrupteur pour changer son état logique.',
     openSource: 'LOGICIEL LIBRE',
+    openSourceCredit: 'Projet libre de Nour Yahyaoui — voir sur GitHub',
     notHint: 'Inverseur : la sortie est l’opposé de l’entrée',
     by: 'Créé par',
     truthTable: 'Tableau de vérité',
@@ -1142,6 +1145,11 @@ onBeforeUnmount(() => {
         <button class="icon-button export-button" :title="t('exportProject')" :aria-label="t('exportProject')" @click="exportProject">
           <Download :size="16" />
         </button>
+        <a class="github-project-link" href="https://github.com/Nour-yahyaoui/multisim-pro" target="_blank" rel="noreferrer" :title="t('openSourceCredit')" :aria-label="t('openSourceCredit')">
+          <GitBranch :size="15" />
+          <span class="github-project-copy"><strong>GitHub</strong><small>{{ language === 'fr' ? 'Logiciel libre · par Nour Yahyaoui' : 'Open source · by Nour Yahyaoui' }}</small></span>
+          <ExternalLink :size="11" />
+        </a>
         <button class="theme-button" :title="t(theme === 'dark' ? 'themeLight' : 'themeDark')" :aria-label="t(theme === 'dark' ? 'themeLight' : 'themeDark')" @click="toggleTheme">
           <Sun v-if="theme === 'dark'" :size="15" /><Moon v-else :size="15" /><span>{{ theme === 'dark' ? (language === 'fr' ? 'Clair' : 'Light') : (language === 'fr' ? 'Sombre' : 'Dark') }}</span>
         </button>
@@ -1243,7 +1251,12 @@ onBeforeUnmount(() => {
             <div><strong>{{ language === 'fr' ? 'Astuce' : 'Quick tip' }}</strong><p>{{ language === 'fr' ? 'Cliquez pour ajouter. Glissez sur la zone pour placer précisément.' : 'Click to add. Drag onto the canvas for precise placement.' }}</p></div>
           </div>
         </div>
-        <div class="palette-footer"><span class="footer-mini-mark"><CircuitBoard :size="13" /></span><span>LOGIC LAB</span><span class="footer-version">v2.0.3</span></div>
+        <div class="palette-footer">
+          <a class="palette-credit-link" href="https://github.com/Nour-yahyaoui/multisim-pro" target="_blank" rel="noreferrer" :title="t('openSourceCredit')">
+            <span class="footer-mini-mark"><CircuitBoard :size="13" /></span><span>{{ language === 'fr' ? 'Par Nour Yahyaoui' : 'By Nour Yahyaoui' }}</span><ExternalLink :size="10" />
+          </a>
+          <span class="footer-version">v2.0.3</span>
+        </div>
       </aside>
 
       <div v-if="!leftCollapsed" class="vertical-resizer left-resizer" role="separator" aria-orientation="vertical" :aria-label="language === 'fr' ? 'Redimensionner la bibliothèque' : 'Resize component library'" tabindex="0" @pointerdown="startResize($event, 'left')" @keydown="resizeByKeyboard($event, 'left')"><span></span></div>

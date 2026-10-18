@@ -33,7 +33,7 @@ Unconnected gate inputs are treated as LOW. The truth-table generator shows the 
 
 ## Open source
 
-Created by **Nour Yahyaoui**.
+Created by **Nour Yahyaoui**. The app header and component-library footer link directly to the open-source repository.
 
 - GitHub: [nour-yahyaoui](https://github.com/nour-yahyaoui)
 - Repository: [Nour-yahyaoui/multisim-pro](https://github.com/Nour-yahyaoui/multisim-pro)
