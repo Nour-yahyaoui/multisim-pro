@@ -37,6 +37,7 @@ import {
   X,
   Zap,
 } from '@lucide/vue'
+import InviteModal from './InviteModal.vue'
 import {
   buildTruthTable,
   GATE_TYPES,
@@ -345,6 +346,7 @@ let idCounter = 0
 let resizeObserver
 
 const t = (key) => strings[language.value]?.[key] ?? strings.en[key] ?? key
+const isInviteRoute = computed(() => window.location.pathname.replace(/\/+$/, '') === '/invite')
 const selectedNode = computed(() => nodes.value.find((node) => node.id === selectedNodeId.value) ?? null)
 const selectedWire = computed(() => wires.value.find((wire) => wire.id === selectedWireId.value) ?? null)
 const liveValues = computed(() => evaluateCircuit(nodes.value, wires.value))
@@ -1707,6 +1709,8 @@ onBeforeUnmount(() => {
         <div class="modal-footer"><a href="https://github.com/Nour-yahyaoui/multisim-pro" target="_blank" rel="noreferrer"><ExternalLink :size="13" />{{ language === 'fr' ? 'Voir le dépôt GitHub' : 'View the GitHub repository' }}</a><button class="modal-done-button" @click="showHelp = false">{{ t('close') }}<Check :size="14" /></button></div>
       </section>
     </div>
+
+    <InviteModal v-if="isInviteRoute" />
   </div>
 </template>
 
