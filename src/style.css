@@ -217,6 +217,7 @@ kbd { font-family: 'DM Mono', ui-monospace, monospace; color: #78869a; backgroun
 .inversion-bubble { fill: #101a28; stroke: #a4b3c6; stroke-width: 1.8; }
 .node-group.node-hot .inversion-bubble { stroke: #76ddc6; }
 .input-switch-control { cursor: pointer; }
+.canvas-region.is-dragging-part .input-switch-control { cursor: grabbing; }
 .source-shell { fill: #111d2b; stroke: #53657c; stroke-width: 1.7; transition: fill .16s, stroke .16s; }
 .node-group.node-input:hover .source-shell { fill: #152537; stroke: #86caba; }
 .node-group.node-input.node-hot .source-shell { stroke: #71d9c1; }

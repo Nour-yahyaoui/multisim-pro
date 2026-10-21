@@ -529,7 +529,7 @@ function handleCanvasDrop(event) {
   addNode(type, point.x - NODE_WIDTH / 2, point.y - NODE_HEIGHT / 2)
 }
 
-function handleNodePointerDown(event, node) {
+function handleNodePointerDown(event, node, captureTarget = canvasSvg.value, toggleOnRelease = false) {
   if (event.button !== 0) return
   event.stopPropagation()
   if (wireStart.value) {
@@ -545,8 +545,9 @@ function handleNodePointerDown(event, node) {
     offsetY: point.y - node.y,
     before: snapshot(),
     moved: false,
+    toggleOnRelease,
   }
-  try { canvasSvg.value?.setPointerCapture(event.pointerId) } catch { /* some browsers do not support capture on SVG */ }
+  try { captureTarget?.setPointerCapture(event.pointerId) } catch { /* some browsers do not support pointer capture */ }
 }
 
 function beginCanvasPan(event) {
@@ -614,7 +615,12 @@ function handleCanvasPointerMove(event) {
   if (wireStart.value) wireStart.value = { ...wireStart.value, cursor: point }
 }
 
-function handleCanvasPointerUp() {
+function handleCanvasPointerUp(event) {
+  const activeDrag = dragging.value
+  if (event?.type === 'pointerup' && activeDrag?.toggleOnRelease && !activeDrag.moved) {
+    const node = nodes.value.find((item) => item.id === activeDrag.id)
+    if (node) toggleInput(node)
+  }
   dragging.value = null
   canvasPanDrag.value = null
   isPanning.value = false
@@ -1488,7 +1494,7 @@ onBeforeUnmount(() => {
               </template>
 
               <template v-else-if="node.type === 'INPUT'">
-                <g class="input-switch-control" :class="{ on: node.value }" :aria-label="t('valueToggle')" @pointerdown.stop @click.stop="toggleInput(node, $event)">
+                <g class="input-switch-control" :class="{ on: node.value }" :aria-label="t('valueToggle')" @pointerdown.stop="handleNodePointerDown($event, node, $event.currentTarget, true)">
                   <rect x="17" y="7" width="66" height="42" rx="10" class="source-shell" />
                   <rect x="27" y="17" width="46" height="18" rx="9" class="switch-track" />
                   <circle :cx="node.value ? 62 : 38" cy="26" r="7" class="switch-thumb" />
