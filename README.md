@@ -17,6 +17,7 @@ A lightweight, open-source digital logic workbench built with Vue 3. Place logic
 - **Workspace controls:** resizable and collapsible component library and inspector; resize, collapse, or expand the truth-table panel fullscreen; zoom, grid snapping, undo/redo, duplicate, delete, and keyboard shortcuts.
 - **Responsive layout:** Tailwind CSS powers the mobile drawer backdrop and responsive utilities; custom styles keep touch targets, safe-area padding, and the circuit workspace comfortable on phones.
 - **Structure navigation:** drag an empty area of the canvas to pan the whole circuit; zoom keeps the view centered, and the position saves locally.
+- **Share page:** open [multisim-pro.vercel.app/invite](https://multisim-pro.vercel.app/invite) for a two-line project introduction, Nour Yahyaoui’s GitHub links, and a copyable share URL.
 
 
 Unconnected gate inputs are treated as LOW. The truth-table generator shows the first eight input switches; any additional sources retain their current switch state.
