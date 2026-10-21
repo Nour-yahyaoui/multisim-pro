@@ -51,6 +51,7 @@ import {
 } from './logic.js'
 
 const STORAGE_KEY = 'logic-lab.workspace.v1'
+const TOUR_STORAGE_KEY = 'logic-lab.onboarding.v1'
 const ALLOWED_TYPES = new Set(['INPUT', 'VCC', 'GND', 'LED', ...GATE_TYPES])
 const DEFAULT_DEMO = makeDemoCircuit()
 
@@ -146,6 +147,33 @@ const strings = {
     helpStep2: 'Click a component output pin (right side), then a destination input pin (left side).',
     helpStep3Title: 'Test the logic',
     helpStep3: 'Toggle inputs, add VCC or GND, and add as many LED outputs as your circuit needs.',
+    tourSkip: 'Skip tour',
+    tourBegin: 'Start tour',
+    tourNext: 'Continue',
+    tourBack: 'Back',
+    tourFinish: 'Finish tour',
+    tourStep: 'STEP',
+    tourQuick: 'A QUICK WALKTHROUGH',
+    tourReady: 'READY WHEN YOU ARE',
+    tourWelcomeTitle: 'Welcome to Logic Lab',
+    tourWelcomeBody: 'Take a quick, guided look around the workspace. We’ll show you the component library, canvas tools, inspector and live truth table.',
+    tourLibraryTitle: 'Your component library',
+    tourLibraryBody: 'Open this panel to browse input switches, logic gates, VCC / GND and LED outputs.',
+    tourPartsTitle: 'Find your components',
+    tourPartsBody: 'This library contains input switches, logic gates, VCC / GND and LED outputs. After the tour, click a part or drag it onto the canvas.',
+    tourCanvasTitle: 'Build and connect',
+    tourCanvasBody: 'The canvas toolbar keeps Select, Wire, grid snap, panel toggles and zoom together. Drag empty canvas space to pan the full circuit.',
+    tourInspectorTitle: 'Open the inspector',
+    tourInspectorBody: 'Use this button to open properties for the selected component: its name, live signal, gate inputs and actions.',
+    tourInspectorPanelTitle: 'Your properties panel',
+    tourInspectorPanelBody: 'Details for the selected item appear here. Select a gate, switch or wire to see its available controls.',
+    tourTruthTitle: 'Live truth table',
+    tourTruthBody: 'The table updates as you build. Collapse or resize it, open it fullscreen, or copy the results as CSV.',
+    tourActionsTitle: 'Workspace controls',
+    tourActionsBody: 'Change the theme or language, control simulation, undo or redo, start a new circuit, and export your project from the top bar.',
+    tourDoneTitle: 'You’re ready to build',
+    tourDoneBody: 'Your workspace saves locally in this browser. You can replay this tour any time from Help.',
+    tourReplay: 'Take the guided tour',
     keyboard: 'Keyboard shortcuts',
     shortcutDelete: 'Delete selected part or wire',
     shortcutUndo: 'Undo',
@@ -269,6 +297,33 @@ const strings = {
     helpStep2: 'Cliquez sur une sortie (à droite), puis sur une entrée de destination (à gauche).',
     helpStep3Title: 'Tester la logique',
     helpStep3: 'Changez les entrées, ajoutez VCC ou GND et autant de sorties LED que nécessaire.',
+    tourSkip: 'Ignorer la visite',
+    tourBegin: 'Commencer la visite',
+    tourNext: 'Continuer',
+    tourBack: 'Retour',
+    tourFinish: 'Terminer la visite',
+    tourStep: 'ÉTAPE',
+    tourQuick: 'VISITE GUIDÉE',
+    tourReady: 'À VOUS DE JOUER',
+    tourWelcomeTitle: 'Bienvenue dans Logic Lab',
+    tourWelcomeBody: 'Découvrez rapidement l’espace de travail. Cette visite présente la bibliothèque, les outils du canevas, l’inspecteur et le tableau de vérité.',
+    tourLibraryTitle: 'Votre bibliothèque de composants',
+    tourLibraryBody: 'Ouvrez ce panneau pour parcourir les interrupteurs, portes logiques, VCC / GND et sorties LED.',
+    tourPartsTitle: 'Trouver vos composants',
+    tourPartsBody: 'Cette bibliothèque regroupe les interrupteurs, portes logiques, VCC / GND et sorties LED. Après la visite, cliquez sur un élément ou glissez-le sur le canevas.',
+    tourCanvasTitle: 'Construire et relier',
+    tourCanvasBody: 'La barre du canevas regroupe Sélection, Fils, l’alignement sur la grille, les panneaux et le zoom. Glissez un espace vide pour déplacer tout le circuit.',
+    tourInspectorTitle: 'Ouvrir l’inspecteur',
+    tourInspectorBody: 'Ce bouton ouvre les propriétés du composant sélectionné : nom, signal en direct, entrées de porte et actions.',
+    tourInspectorPanelTitle: 'Le panneau des propriétés',
+    tourInspectorPanelBody: 'Les détails de l’élément sélectionné apparaissent ici. Choisissez une porte, un interrupteur ou un fil pour voir ses commandes.',
+    tourTruthTitle: 'Tableau de vérité en direct',
+    tourTruthBody: 'Le tableau se met à jour pendant la construction. Réduisez-le, redimensionnez-le, affichez-le en plein écran ou copiez-le en CSV.',
+    tourActionsTitle: 'Commandes de l’espace de travail',
+    tourActionsBody: 'Changez le thème ou la langue, contrôlez la simulation, annulez/rétablissez, créez un circuit ou exportez-le depuis la barre supérieure.',
+    tourDoneTitle: 'À vous de jouer',
+    tourDoneBody: 'Votre espace de travail est enregistré dans ce navigateur. Vous pourrez relancer la visite à tout moment depuis Aide.',
+    tourReplay: 'Lancer la visite guidée',
     keyboard: 'Raccourcis clavier',
     shortcutDelete: 'Supprimer l’élément ou le fil sélectionné',
     shortcutUndo: 'Annuler',
@@ -305,8 +360,8 @@ const strings = {
 
 const language = ref('en')
 const theme = ref('dark')
-const leftCollapsed = ref(false)
-const rightCollapsed = ref(false)
+const leftCollapsed = ref(true)
+const rightCollapsed = ref(true)
 const truthCollapsed = ref(false)
 const truthFullscreen = ref(false)
 const nodes = ref(DEFAULT_DEMO.nodes.map((node) => ({ ...node })))
@@ -327,6 +382,11 @@ const canvasPanDrag = ref(null)
 const isPanning = ref(false)
 const isRunning = ref(true)
 const showHelp = ref(false)
+const tourActive = ref(false)
+const tourStep = ref(0)
+const tourTargetRect = ref(null)
+const tourCard = ref(null)
+const tourViewport = ref({ width: 0, height: 0 })
 const searchQuery = ref('')
 const toastMessage = ref('')
 const saveState = ref('saved')
@@ -347,6 +407,77 @@ let resizeObserver
 
 const t = (key) => strings[language.value]?.[key] ?? strings.en[key] ?? key
 const isInviteRoute = computed(() => window.location.pathname.replace(/\/+$/, '') === '/invite')
+const tourSteps = computed(() => [
+  { id: 'welcome', title: t('tourWelcomeTitle'), body: t('tourWelcomeBody') },
+  { id: 'library-toggle', target: '[data-tour="sidebar-left-toggle"]', mobileTarget: '[data-tour="mobile-sidebar-left"]', interactive: true, title: t('tourLibraryTitle'), body: t('tourLibraryBody') },
+  { id: 'library-content', target: '[data-tour="tour-input-card"]', title: t('tourPartsTitle'), body: t('tourPartsBody') },
+  { id: 'canvas-tools', target: '[data-tour="canvas-tools"]', title: t('tourCanvasTitle'), body: t('tourCanvasBody') },
+  { id: 'inspector-toggle', target: '[data-tour="sidebar-right-toggle"]', mobileTarget: '[data-tour="mobile-sidebar-right"]', interactive: true, title: t('tourInspectorTitle'), body: t('tourInspectorBody') },
+  { id: 'inspector-content', target: '[data-tour="inspector-panel"]', title: t('tourInspectorPanelTitle'), body: t('tourInspectorPanelBody') },
+  { id: 'truth-table', target: '[data-tour="truth-table"]', title: t('tourTruthTitle'), body: t('tourTruthBody') },
+  { id: 'top-actions', target: '[data-tour="top-actions"]', title: t('tourActionsTitle'), body: t('tourActionsBody') },
+  { id: 'finish', title: t('tourDoneTitle'), body: t('tourDoneBody') },
+])
+const currentTourStep = computed(() => tourSteps.value[tourStep.value] ?? null)
+const tourLastStep = computed(() => tourSteps.value.length - 1)
+const tourGuidedStepCount = computed(() => Math.max(1, tourSteps.value.length - 2))
+const tourProgress = computed(() => tourStep.value <= 0 ? 0 : tourStep.value >= tourLastStep.value ? 100 : Math.round(tourStep.value / tourGuidedStepCount.value * 100))
+const tourKicker = computed(() => tourStep.value === 0 ? t('tourQuick') : tourStep.value === tourLastStep.value ? t('tourReady') : `${t('tourStep')} ${tourStep.value} / ${tourGuidedStepCount.value}`)
+const tourShadeStyles = computed(() => {
+  const { width: viewportWidth, height: viewportHeight } = tourViewport.value
+  if (!viewportWidth || !viewportHeight) return []
+  const target = tourTargetRect.value
+  if (!target) return [{ top: '0px', left: '0px', width: `${viewportWidth}px`, height: `${viewportHeight}px` }]
+  const padding = 9
+  const left = Math.max(0, target.left - padding)
+  const top = Math.max(0, target.top - padding)
+  const right = Math.min(viewportWidth, target.left + target.width + padding)
+  const bottom = Math.min(viewportHeight, target.top + target.height + padding)
+  return [
+    { top: 0, left: 0, width: viewportWidth, height: top },
+    { top, left: 0, width: left, height: bottom - top },
+    { top, left: right, width: viewportWidth - right, height: bottom - top },
+    { top: bottom, left: 0, width: viewportWidth, height: viewportHeight - bottom },
+  ].filter((shade) => shade.width > 0 && shade.height > 0).map((shade) => Object.fromEntries(Object.entries(shade).map(([key, value]) => [key, `${value}px`])))
+})
+const tourFocusStyle = computed(() => {
+  const rect = tourTargetRect.value
+  if (!rect) return {}
+  const padding = 7
+  return {
+    left: `${Math.max(0, rect.left - padding)}px`,
+    top: `${Math.max(0, rect.top - padding)}px`,
+    width: `${Math.min(tourViewport.value.width, rect.width + padding * 2)}px`,
+    height: `${Math.min(tourViewport.value.height, rect.height + padding * 2)}px`,
+  }
+})
+const tourGuardStyle = computed(() => {
+  const rect = tourTargetRect.value
+  if (!rect) return {}
+  return { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` }
+})
+const tourPointerStyle = computed(() => {
+  const rect = tourTargetRect.value
+  const viewport = tourViewport.value
+  if (!rect || !viewport.width || !viewport.height) return { opacity: 0 }
+  const size = 32
+  const left = Math.max(4, Math.min(viewport.width - size - 4, rect.left + rect.width - 4))
+  const top = Math.max(4, Math.min(viewport.height - size - 4, rect.top + rect.height - 5))
+  return { left: `${left}px`, top: `${top}px`, opacity: 1 }
+})
+const tourCardStyle = computed(() => {
+  const { width: viewportWidth, height: viewportHeight } = tourViewport.value
+  if (!viewportWidth || !viewportHeight) return {}
+  const target = tourTargetRect.value
+  if (!target) return { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }
+  const cardWidth = Math.min(480, viewportWidth - 24)
+  const cardHeight = Math.min(280, viewportHeight - 24)
+  const left = Math.max(12, Math.min(viewportWidth - cardWidth - 12, target.left + target.width / 2 - cardWidth / 2))
+  let top = target.top + target.height + 18
+  if (top + cardHeight > viewportHeight - 12) top = target.top - cardHeight - 18
+  if (top < 12) top = Math.max(12, (viewportHeight - cardHeight) / 2)
+  return { left: `${left}px`, top: `${top}px` }
+})
 const selectedNode = computed(() => nodes.value.find((node) => node.id === selectedNodeId.value) ?? null)
 const selectedWire = computed(() => wires.value.find((wire) => wire.id === selectedWireId.value) ?? null)
 const liveValues = computed(() => evaluateCircuit(nodes.value, wires.value))
@@ -845,7 +976,161 @@ function toggleTheme() {
   applyThemeToDocument()
 }
 
+function currentTourSelector(step = currentTourStep.value) {
+  if (!step?.target) return ''
+  return window.innerWidth <= 740 && step.mobileTarget ? step.mobileTarget : step.target
+}
+
+function updateTourTarget() {
+  tourViewport.value = { width: window.innerWidth, height: window.innerHeight }
+  if (!tourActive.value) return
+  const selector = currentTourSelector()
+  if (!selector) {
+    tourTargetRect.value = null
+    return
+  }
+  const target = document.querySelector(selector)
+  if (!target) {
+    tourTargetRect.value = null
+    return
+  }
+  const rect = target.getBoundingClientRect()
+  tourTargetRect.value = { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+}
+
+function scheduleTourTargetUpdate(shouldFocus = false) {
+  nextTick(() => {
+    if (!tourActive.value) return
+    if (shouldFocus) tourCard.value?.focus({ preventScroll: true })
+    window.requestAnimationFrame(updateTourTarget)
+  })
+}
+
+function moveTourTo(index) {
+  tourStep.value = Math.max(0, Math.min(tourLastStep.value, index))
+  if (!currentTourStep.value?.target) tourTargetRect.value = null
+  scheduleTourTargetUpdate(true)
+}
+
+function startTour() {
+  if (isInviteRoute.value) return
+  showHelp.value = false
+  leftCollapsed.value = true
+  rightCollapsed.value = true
+  truthFullscreen.value = false
+  mobilePanel.value = ''
+  tourStep.value = 0
+  tourActive.value = true
+  scheduleTourTargetUpdate(true)
+}
+
+function rememberTourDismissal() {
+  try { window.localStorage.setItem(TOUR_STORAGE_KEY, 'done') } catch { /* tour can still be dismissed without storage */ }
+}
+
+function finishTour() {
+  rememberTourDismissal()
+  tourActive.value = false
+  tourTargetRect.value = null
+  leftCollapsed.value = true
+  rightCollapsed.value = true
+  mobilePanel.value = ''
+  truthFullscreen.value = false
+}
+
+function skipTour() {
+  finishTour()
+}
+
+function tourNext() {
+  const id = currentTourStep.value?.id
+  if (id === 'finish') {
+    finishTour()
+    return
+  }
+  if (id === 'library-toggle') {
+    leftCollapsed.value = false
+    if (window.innerWidth <= 740) mobilePanel.value = 'left'
+  } else if (id === 'library-content') {
+    leftCollapsed.value = true
+    mobilePanel.value = ''
+  } else if (id === 'inspector-toggle') {
+    rightCollapsed.value = false
+    if (window.innerWidth <= 740) mobilePanel.value = 'right'
+  } else if (id === 'inspector-content') {
+    rightCollapsed.value = true
+    mobilePanel.value = ''
+  }
+  moveTourTo(tourStep.value + 1)
+}
+
+function tourPrevious() {
+  if (tourStep.value <= 0) return
+  const id = currentTourStep.value?.id
+  if (id === 'library-content') {
+    leftCollapsed.value = true
+    mobilePanel.value = ''
+  } else if (id === 'canvas-tools') {
+    leftCollapsed.value = false
+    if (window.innerWidth <= 740) mobilePanel.value = 'left'
+  } else if (id === 'inspector-content') {
+    rightCollapsed.value = true
+    mobilePanel.value = ''
+  } else if (id === 'truth-table') {
+    rightCollapsed.value = false
+    if (window.innerWidth <= 740) mobilePanel.value = 'right'
+  }
+  moveTourTo(tourStep.value - 1)
+}
+
+function handleTourSidebarClick(side) {
+  const id = currentTourStep.value?.id
+  if (side === 'left' && id === 'library-toggle') {
+    leftCollapsed.value = false
+    mobilePanel.value = ''
+    moveTourTo(tourStep.value + 1)
+    return true
+  }
+  if (side === 'left' && id === 'library-content') {
+    leftCollapsed.value = true
+    mobilePanel.value = ''
+    moveTourTo(tourStep.value + 1)
+    return true
+  }
+  if (side === 'right' && id === 'inspector-toggle') {
+    rightCollapsed.value = false
+    mobilePanel.value = ''
+    moveTourTo(tourStep.value + 1)
+    return true
+  }
+  if (side === 'right' && id === 'inspector-content') {
+    rightCollapsed.value = true
+    mobilePanel.value = ''
+    moveTourTo(tourStep.value + 1)
+    return true
+  }
+  return false
+}
+
+function handleTourMobilePanelClick(panel) {
+  const id = currentTourStep.value?.id
+  if (tourActive.value && panel === 'left' && id === 'library-toggle') {
+    leftCollapsed.value = false
+    mobilePanel.value = 'left'
+    moveTourTo(tourStep.value + 1)
+    return true
+  }
+  if (tourActive.value && panel === 'right' && id === 'inspector-toggle') {
+    rightCollapsed.value = false
+    mobilePanel.value = 'right'
+    moveTourTo(tourStep.value + 1)
+    return true
+  }
+  return false
+}
+
 function toggleSidebar(side) {
+  if (tourActive.value && handleTourSidebarClick(side)) return
   if (side === 'left') leftCollapsed.value = !leftCollapsed.value
   if (side === 'right') rightCollapsed.value = !rightCollapsed.value
   mobilePanel.value = ''
@@ -1100,6 +1385,29 @@ function resizeByKeyboard(event, kind) {
 }
 
 function onGlobalKeydown(event) {
+  if (tourActive.value) {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      skipTour()
+    } else if (event.key === 'Tab') {
+      const focusable = [...document.querySelectorAll('.tour-card button:not(:disabled)')]
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (!first || !last) {
+        event.preventDefault()
+      } else if (!tourCard.value?.contains(document.activeElement)) {
+        event.preventDefault()
+        first.focus()
+      } else if (event.shiftKey && (document.activeElement === first || document.activeElement === tourCard.value)) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === tourCard.value)) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    return
+  }
   const targetTag = event.target?.tagName?.toLowerCase()
   const isEditing = ['input', 'textarea', 'select'].includes(targetTag) || event.target?.isContentEditable
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
@@ -1197,14 +1505,26 @@ function updateCanvasSize() {
 }
 
 function openMobilePanel(panel) {
+  if (handleTourMobilePanelClick(panel)) return
   const closing = mobilePanel.value === panel
   if (!closing && panel === 'left') leftCollapsed.value = false
   if (!closing && panel === 'right') rightCollapsed.value = false
   mobilePanel.value = closing ? '' : panel
 }
 
+function handleWindowResize() {
+  updateCanvasSize()
+  if (tourActive.value) scheduleTourTargetUpdate()
+}
+
 onMounted(async () => {
+  let shouldStartTour = false
+  try { shouldStartTour = !window.localStorage.getItem(TOUR_STORAGE_KEY) } catch { shouldStartTour = true }
   const restored = restoreFromStorage()
+  if (shouldStartTour && !isInviteRoute.value) {
+    leftCollapsed.value = true
+    rightCollapsed.value = true
+  }
   document.documentElement.lang = language.value
   applyThemeToDocument()
   await nextTick()
@@ -1216,7 +1536,9 @@ onMounted(async () => {
   }
   isHydrated.value = true
   window.addEventListener('keydown', onGlobalKeydown)
-  window.addEventListener('resize', updateCanvasSize)
+  window.addEventListener('resize', handleWindowResize)
+  window.addEventListener('scroll', scheduleTourTargetUpdate, true)
+  if (shouldStartTour && !isInviteRoute.value) startTour()
 })
 
 onBeforeUnmount(() => {
@@ -1224,7 +1546,8 @@ onBeforeUnmount(() => {
   window.clearTimeout(toastTimer)
   resizeObserver?.disconnect()
   window.removeEventListener('keydown', onGlobalKeydown)
-  window.removeEventListener('resize', updateCanvasSize)
+  window.removeEventListener('resize', handleWindowResize)
+  window.removeEventListener('scroll', scheduleTourTargetUpdate, true)
   window.removeEventListener('pointermove', handleResizeMove)
   window.removeEventListener('pointerup', stopResize)
 })
@@ -1233,7 +1556,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="app-shell" :class="[`lang-${language}`, { 'wire-mode': wireStart || toolMode === 'wire', 'theme-light': theme === 'light' }]">
     <header class="topbar">
-      <button class="mobile-panel-toggle" :aria-label="t('components')" @click="openMobilePanel('left')">
+      <button class="mobile-panel-toggle" data-tour="mobile-sidebar-left" :aria-label="t('components')" @click="openMobilePanel('left')">
         <CircuitBoard :size="17" />
       </button>
       <div class="brand-block">
@@ -1254,7 +1577,7 @@ onBeforeUnmount(() => {
         <span class="save-label">{{ liveSaveLabel }}</span>
       </button>
 
-      <div class="top-actions">
+      <div class="top-actions" data-tour="top-actions">
         <div class="history-actions">
           <button class="icon-button" :disabled="!canUndo" :title="`${t('shortcutUndo')} · Ctrl Z`" :aria-label="t('shortcutUndo')" @click="undo">
             <Undo2 :size="16" />
@@ -1286,7 +1609,7 @@ onBeforeUnmount(() => {
           <span>{{ t(isRunning ? 'running' : 'simulate') }}</span>
           <span class="run-indicator"></span>
         </button>
-        <button class="mobile-panel-toggle inspector-toggle" :aria-label="t('properties')" @click="openMobilePanel('right')">
+        <button class="mobile-panel-toggle inspector-toggle" data-tour="mobile-sidebar-right" :aria-label="t('properties')" @click="openMobilePanel('right')">
           <Settings2 :size="17" />
         </button>
       </div>
@@ -1324,6 +1647,7 @@ onBeforeUnmount(() => {
                 v-for="component in sourcesCatalog"
                 :key="component.type"
                 class="component-card"
+                :data-tour="component.type === 'INPUT' ? 'tour-input-card' : undefined"
                 :class="`tone-${component.tint}`"
                 draggable="true"
                 :title="`${component.type} · ${t(component.hint)}`"
@@ -1394,7 +1718,7 @@ onBeforeUnmount(() => {
       <div v-if="!leftCollapsed" class="vertical-resizer left-resizer" role="separator" aria-orientation="vertical" :aria-label="language === 'fr' ? 'Redimensionner la bibliothèque' : 'Resize component library'" tabindex="0" @pointerdown="startResize($event, 'left')" @keydown="resizeByKeyboard($event, 'left')"><span></span></div>
 
       <main class="workbench">
-        <div class="canvas-toolbar">
+        <div class="canvas-toolbar" data-tour="canvas-tools">
           <div class="canvas-toolbar-title">
             <span class="canvas-live-dot"></span>
             <span>{{ t('canvas') }}</span>
@@ -1412,10 +1736,10 @@ onBeforeUnmount(() => {
             <button class="tool-button snap-button" :class="{ active: snapToGrid }" :title="t('snap')" :aria-label="t('snap')" @click="snapToGrid = !snapToGrid"><span class="snap-glyph">⌗</span></button>
           </div>
           <div class="layout-toggle-group">
-            <button class="layout-toggle-button" :class="{ active: !leftCollapsed }" :title="t(leftCollapsed ? 'showComponents' : 'hideComponents')" :aria-label="t(leftCollapsed ? 'showComponents' : 'hideComponents')" :aria-expanded="!leftCollapsed" @click="toggleSidebar('left')">
+            <button class="layout-toggle-button" data-tour="sidebar-left-toggle" :class="{ active: !leftCollapsed }" :title="t(leftCollapsed ? 'showComponents' : 'hideComponents')" :aria-label="t(leftCollapsed ? 'showComponents' : 'hideComponents')" :aria-expanded="!leftCollapsed" @click="toggleSidebar('left')">
               <PanelLeftOpen v-if="leftCollapsed" :size="15" /><PanelLeftClose v-else :size="15" />
             </button>
-            <button class="layout-toggle-button" :class="{ active: !rightCollapsed }" :title="t(rightCollapsed ? 'showInspector' : 'hideInspector')" :aria-label="t(rightCollapsed ? 'showInspector' : 'hideInspector')" :aria-expanded="!rightCollapsed" @click="toggleSidebar('right')">
+            <button class="layout-toggle-button" data-tour="sidebar-right-toggle" :class="{ active: !rightCollapsed }" :title="t(rightCollapsed ? 'showInspector' : 'hideInspector')" :aria-label="t(rightCollapsed ? 'showInspector' : 'hideInspector')" :aria-expanded="!rightCollapsed" @click="toggleSidebar('right')">
               <PanelRightOpen v-if="rightCollapsed" :size="15" /><PanelRightClose v-else :size="15" />
             </button>
             <button class="layout-toggle-button bottom-toggle" :class="{ active: !truthCollapsed }" :title="t(truthCollapsed ? 'showTruthTable' : 'hideTruthTable')" :aria-label="t(truthCollapsed ? 'showTruthTable' : 'hideTruthTable')" :aria-expanded="!truthCollapsed" @click="toggleTruthPanel">
@@ -1554,7 +1878,7 @@ onBeforeUnmount(() => {
 
         <div v-if="!truthCollapsed && !truthFullscreen" class="horizontal-resizer" role="separator" aria-orientation="horizontal" :aria-label="language === 'fr' ? 'Redimensionner le tableau de vérité' : 'Resize truth table'" tabindex="0" @pointerdown="startResize($event, 'truth')" @keydown="resizeByKeyboard($event, 'truth')"><span></span></div>
 
-        <section class="truth-panel" :class="{ collapsed: truthCollapsed, fullscreen: truthFullscreen }" :style="truthPanelStyle">
+        <section class="truth-panel" data-tour="truth-table" :class="{ collapsed: truthCollapsed, fullscreen: truthFullscreen }" :style="truthPanelStyle">
           <div class="truth-header">
             <div class="truth-heading-copy">
               <div class="truth-icon"><Activity :size="16" /></div>
@@ -1599,7 +1923,7 @@ onBeforeUnmount(() => {
 
       <div v-if="!rightCollapsed" class="vertical-resizer right-resizer" role="separator" aria-orientation="vertical" :aria-label="language === 'fr' ? 'Redimensionner l’inspecteur' : 'Resize inspector'" tabindex="0" @pointerdown="startResize($event, 'right')" @keydown="resizeByKeyboard($event, 'right')"><span></span></div>
 
-      <aside v-if="!rightCollapsed" class="inspector-panel" :class="{ 'mobile-open': mobilePanel === 'right' }" :style="{ width: `${rightWidth}px` }">
+      <aside v-if="!rightCollapsed" data-tour="inspector-panel" class="inspector-panel" :class="{ 'mobile-open': mobilePanel === 'right' }" :style="{ width: `${rightWidth}px` }">
         <div class="panel-heading inspector-heading">
           <div><div class="panel-title">{{ t('properties') }}</div><div class="panel-subtitle">{{ selectedNode ? selectedNode.label : t('inspect') }}</div></div>
           <div class="panel-heading-actions">
@@ -1712,7 +2036,27 @@ onBeforeUnmount(() => {
           <div class="help-step"><span>03</span><div><strong>{{ t('helpStep3Title') }}</strong><p>{{ t('helpStep3') }}</p></div></div>
         </div>
         <div class="shortcut-box"><strong>{{ t('keyboard') }}</strong><div><kbd>⌘ / Ctrl</kbd><kbd>Z</kbd><span>{{ t('shortcutUndo') }}</span></div><div><kbd>⌘ / Ctrl</kbd><kbd>Shift</kbd><kbd>Z</kbd><span>{{ t('shortcutRedo') }}</span></div><div><kbd>Delete</kbd><span>{{ t('shortcutDelete') }}</span></div></div>
-        <div class="modal-footer"><a href="https://github.com/Nour-yahyaoui/multisim-pro" target="_blank" rel="noreferrer"><ExternalLink :size="13" />{{ language === 'fr' ? 'Voir le dépôt GitHub' : 'View the GitHub repository' }}</a><button class="modal-done-button" @click="showHelp = false">{{ t('close') }}<Check :size="14" /></button></div>
+        <div class="modal-footer"><a href="https://github.com/Nour-yahyaoui/multisim-pro" target="_blank" rel="noreferrer"><ExternalLink :size="13" />{{ language === 'fr' ? 'Voir le dépôt GitHub' : 'View the GitHub repository' }}</a><button class="tour-restart-button" @click="startTour"><MousePointer2 :size="13" />{{ t('tourReplay') }}</button><button class="modal-done-button" @click="showHelp = false">{{ t('close') }}<Check :size="14" /></button></div>
+      </section>
+    </div>
+
+    <div v-if="tourActive" class="tour-overlay" @keydown.esc.stop.prevent="skipTour">
+      <div v-for="(shade, index) in tourShadeStyles" :key="index" class="tour-shade" :style="shade"></div>
+      <div v-if="tourTargetRect" class="tour-focus-frame" :style="tourFocusStyle" aria-hidden="true"></div>
+      <div v-if="tourTargetRect && !currentTourStep?.interactive" class="tour-target-guard" :style="tourGuardStyle" aria-hidden="true"></div>
+      <MousePointer2 v-if="tourTargetRect" class="tour-pointer" :size="32" :style="tourPointerStyle" aria-hidden="true" />
+      <section ref="tourCard" class="tour-card" :class="{ centered: !tourTargetRect }" :style="tourCardStyle" role="dialog" aria-modal="true" aria-labelledby="tour-step-title" aria-describedby="tour-step-body" tabindex="-1">
+        <div class="tour-card-topline">
+          <div class="tour-kicker"><span class="tour-kicker-dot"></span>{{ tourKicker }}</div>
+          <button type="button" class="tour-skip" @click="skipTour">{{ t('tourSkip') }}</button>
+        </div>
+        <div class="tour-progress-track" role="progressbar" :aria-valuenow="tourProgress" aria-valuemin="0" aria-valuemax="100" :aria-label="tourKicker"><div class="tour-progress-fill" :style="{ width: `${tourProgress}%` }"></div></div>
+        <h2 id="tour-step-title" aria-live="polite">{{ currentTourStep?.title }}</h2>
+        <p id="tour-step-body" class="tour-card-body">{{ currentTourStep?.body }}</p>
+        <div class="tour-card-footer">
+          <button v-if="tourStep > 0" type="button" class="tour-back-button" @click="tourPrevious"><ChevronRight :size="14" class="tour-back-chevron" />{{ t('tourBack') }}</button>
+          <button type="button" class="tour-primary-button" @click="tourNext">{{ tourStep === 0 ? t('tourBegin') : tourStep === tourLastStep ? t('tourFinish') : t('tourNext') }}<Check v-if="tourStep === tourLastStep" :size="14" /><ChevronRight v-else :size="14" /></button>
+        </div>
       </section>
     </div>
 
