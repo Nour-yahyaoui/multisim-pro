@@ -1,13 +1,20 @@
 export const NODE_WIDTH = 116
 export const NODE_HEIGHT = 82
 export const MAX_TRUTH_TABLE_INPUTS = 8
+export const MAX_GATE_INPUTS = 16
 
 export const GATE_TYPES = ['AND', 'OR', 'NOT', 'XOR', 'NAND', 'NOR', 'XNOR']
 export const SOURCE_TYPES = ['INPUT', 'VCC', 'GND']
 export const OUTPUT_TYPES = ['LED']
 
-export function inputCount(type) {
+export function inputCount(nodeOrType) {
+  const node = nodeOrType && typeof nodeOrType === 'object' ? nodeOrType : null
+  const type = node ? node.type : nodeOrType
   if (type === 'NOT' || type === 'LED') return 1
+  if (type === 'OR' || type === 'NOR') {
+    const configured = Number(node?.inputCount)
+    return Number.isFinite(configured) ? Math.max(2, Math.min(MAX_GATE_INPUTS, Math.trunc(configured))) : 2
+  }
   if (GATE_TYPES.includes(type)) return 2
   return 0
 }
@@ -73,13 +80,13 @@ export function evaluateCircuit(nodes, wires, assignments = {}) {
         value = readInput(node, 0) && readInput(node, 1)
         break
       case 'OR':
-        value = readInput(node, 0) || readInput(node, 1)
+        value = Array.from({ length: inputCount(node) }, (_, port) => readInput(node, port)).some(Boolean)
         break
       case 'NAND':
         value = !(readInput(node, 0) && readInput(node, 1))
         break
       case 'NOR':
-        value = !(readInput(node, 0) || readInput(node, 1))
+        value = !Array.from({ length: inputCount(node) }, (_, port) => readInput(node, port)).some(Boolean)
         break
       case 'XOR':
         value = readInput(node, 0) !== readInput(node, 1)

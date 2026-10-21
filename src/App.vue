@@ -43,6 +43,7 @@ import {
   inputCount,
   makeDemoCircuit,
   MAX_TRUTH_TABLE_INPUTS,
+  MAX_GATE_INPUTS,
   NODE_HEIGHT,
   NODE_WIDTH,
   evaluateCircuit,
@@ -102,6 +103,9 @@ const strings = {
     high: 'HIGH',
     low: 'LOW',
     inputPins: 'Inputs',
+    gateInputCount: 'Number of inputs',
+    addGateInput: 'Add an input pin',
+    removeGateInput: 'Remove the last input pin',
     outputPin: 'Output',
     connected: 'Connected',
     unconnected: 'Not connected',
@@ -116,6 +120,7 @@ const strings = {
     tipDrag: 'Drag empty canvas space to move the full circuit, or drag a component to move it alone.',
     tipWire: 'Click a pin on the right, then a pin on the left to wire.',
     tipToggle: 'Click an input switch to toggle its logic state.',
+    tipOutputs: 'Add LED components repeatedly to show multiple truth-table outputs.',
     openSource: 'OPEN SOURCE',
     openSourceCredit: 'Open-source project by Nour Yahyaoui — view it on GitHub',
     notHint: 'Inverter: output is the opposite of the input',
@@ -139,7 +144,7 @@ const strings = {
     helpStep2Title: 'Connect signals',
     helpStep2: 'Click a component output pin (right side), then a destination input pin (left side).',
     helpStep3Title: 'Test the logic',
-    helpStep3: 'Toggle input switches, add VCC or GND, and read the live truth table below.',
+    helpStep3: 'Toggle inputs, add VCC or GND, and add as many LED outputs as your circuit needs.',
     keyboard: 'Keyboard shortcuts',
     shortcutDelete: 'Delete selected part or wire',
     shortcutUndo: 'Undo',
@@ -221,6 +226,9 @@ const strings = {
     high: 'HAUT',
     low: 'BAS',
     inputPins: 'Entrées',
+    gateInputCount: 'Nombre d’entrées',
+    addGateInput: 'Ajouter une entrée',
+    removeGateInput: 'Supprimer la dernière entrée',
     outputPin: 'Sortie',
     connected: 'Connectée',
     unconnected: 'Non connectée',
@@ -235,6 +243,7 @@ const strings = {
     tipDrag: 'Glissez une zone vide pour déplacer tout le circuit, ou un composant pour le déplacer seul.',
     tipWire: 'Cliquez sur une sortie à droite, puis sur une entrée à gauche.',
     tipToggle: 'Cliquez sur un interrupteur pour changer son état logique.',
+    tipOutputs: 'Ajoutez plusieurs LED pour afficher plusieurs sorties dans le tableau de vérité.',
     openSource: 'LOGICIEL LIBRE',
     openSourceCredit: 'Projet libre de Nour Yahyaoui — voir sur GitHub',
     notHint: 'Inverseur : la sortie est l’opposé de l’entrée',
@@ -258,7 +267,7 @@ const strings = {
     helpStep2Title: 'Relier les signaux',
     helpStep2: 'Cliquez sur une sortie (à droite), puis sur une entrée de destination (à gauche).',
     helpStep3Title: 'Tester la logique',
-    helpStep3: 'Changez les interrupteurs, ajoutez VCC ou GND et consultez le tableau en direct.',
+    helpStep3: 'Changez les entrées, ajoutez VCC ou GND et autant de sorties LED que nécessaire.',
     keyboard: 'Raccourcis clavier',
     shortcutDelete: 'Supprimer l’élément ou le fil sélectionné',
     shortcutUndo: 'Annuler',
@@ -449,11 +458,12 @@ function snapCoordinate(value) {
   return snapToGrid.value ? Math.round(value / 24) * 24 : value
 }
 
-function clampNodePosition(x, y) {
+function clampNodePosition(x, y, node = null) {
+  const height = node ? nodeHeight(node) : NODE_HEIGHT
   const minX = panOffset.value.x + 8
   const minY = panOffset.value.y + 8
   const maxX = Math.max(minX, panOffset.value.x + viewWidth.value - NODE_WIDTH - 20)
-  const maxY = Math.max(minY, panOffset.value.y + viewHeight.value - NODE_HEIGHT - 20)
+  const maxY = Math.max(minY, panOffset.value.y + viewHeight.value - height - 20)
   return {
     x: Math.max(minX, Math.min(maxX, snapCoordinate(x))),
     y: Math.max(minY, Math.min(maxY, snapCoordinate(y))),
@@ -595,7 +605,7 @@ function handleCanvasPointerMove(event) {
       dragging.value.moved = true
       recordHistory(dragging.value.before)
     }
-    const position = clampNodePosition(point.x - dragging.value.offsetX, point.y - dragging.value.offsetY)
+    const position = clampNodePosition(point.x - dragging.value.offsetX, point.y - dragging.value.offsetY, node)
     node.x = position.x
     node.y = position.y
   }
@@ -668,15 +678,51 @@ function wirePath(wire) {
   return `M ${start.x} ${start.y} H ${midX} V ${end.y} H ${end.x}`
 }
 
-function outputPosition(node) {
-  return { x: node.x + 106, y: node.y + 28 }
+function inputLocalY(node, port) {
+  const count = inputCount(node)
+  if (count <= 1) return 28
+  if (count === 2) return port === 0 ? 15 : 41
+  return 15 + port * 20
+}
+
+function outputLocalY(node) {
+  if (node.type !== 'OR' && node.type !== 'NOR') return 28
+  const count = inputCount(node)
+  return (inputLocalY(node, 0) + inputLocalY(node, count - 1)) / 2
+}
+
+function nodeHeight(node) {
+  if (node.type !== 'OR' && node.type !== 'NOR') return NODE_HEIGHT
+  return Math.max(NODE_HEIGHT, inputLocalY(node, inputCount(node) - 1) + 37)
+}
+
+function nodeCaptionY(node) {
+  return Math.max(74, nodeHeight(node) - 8)
+}
+
+function orGatePath(node) {
+  const top = inputLocalY(node, 0) - 11
+  const bottom = inputLocalY(node, inputCount(node) - 1) + 11
+  const center = (top + bottom) / 2
+  return `M19 ${top} Q34 ${center} 19 ${bottom} Q49 ${bottom - 1} 81 ${center} Q49 ${top + 1} 19 ${top} Z`
 }
 
 function inputPosition(node, port) {
-  const count = inputCount(node.type)
-  let localY = 28
-  if (count === 2) localY = port === 0 ? 15 : 41
-  return { x: node.x + 8, y: node.y + localY }
+  return { x: node.x + 8, y: node.y + inputLocalY(node, port) }
+}
+
+function outputPosition(node) {
+  return { x: node.x + 106, y: node.y + outputLocalY(node) }
+}
+
+function inputPinShortLabel(index) {
+  return String.fromCharCode(65 + index)
+}
+
+function inputPinName(index) {
+  if (index === 0) return t('portA')
+  if (index === 1) return t('portB')
+  return language.value === 'fr' ? `Entrée ${index + 1}` : `Input ${index + 1}`
 }
 
 function previewWirePath() {
@@ -719,7 +765,7 @@ function duplicateSelected() {
   }
   const source = selectedNode.value
   recordHistory()
-  const position = clampNodePosition(source.x + 30, source.y + 30)
+  const position = clampNodePosition(source.x + 30, source.y + 30, source)
   const clone = {
     ...source,
     id: makeId('node'),
@@ -833,6 +879,7 @@ function sanitizeLoadedState(data) {
       id: raw.id.slice(0, 100),
       type: raw.type,
       label: String(raw.label || raw.type).slice(0, 20),
+      ...(['OR', 'NOR'].includes(raw.type) ? { inputCount: inputCount(raw) } : {}),
       x: Number.isFinite(Number(raw.x)) ? Math.max(-100000, Math.min(100000, Number(raw.x))) : 40,
       y: Number.isFinite(Number(raw.y)) ? Math.max(-100000, Math.min(100000, Number(raw.y))) : 40,
       ...(raw.type === 'INPUT' ? { value: Boolean(raw.value) } : {}),
@@ -845,7 +892,7 @@ function sanitizeLoadedState(data) {
     const from = validNodeMap.get(raw?.from)
     const to = validNodeMap.get(raw?.to)
     const port = Number(raw?.toPort)
-    if (!from || !to || from.type === 'LED' || !Number.isInteger(port) || port < 0 || port >= inputCount(to.type)) continue
+    if (!from || !to || from.type === 'LED' || !Number.isInteger(port) || port < 0 || port >= inputCount(to)) continue
     const key = `${to.id}:${port}`
     if (wiredInputs.has(key)) continue
     wiredInputs.add(key)
@@ -966,6 +1013,21 @@ async function copyTruthTable() {
     downloadFile('truth-table.csv', csv, 'text/csv;charset=utf-8')
     notify(t('toastCopied'))
   }
+}
+
+function changeGateInputCount(node, delta) {
+  if (!node || !['OR', 'NOR'].includes(node.type)) return
+  const current = inputCount(node)
+  const next = Math.max(2, Math.min(MAX_GATE_INPUTS, current + delta))
+  if (next === current) return
+  recordHistory()
+  node.inputCount = next
+  if (next < current) {
+    wires.value = wires.value.filter((wire) => wire.to !== node.id || wire.toPort < next)
+  }
+  const position = clampNodePosition(node.x, node.y, node)
+  node.x = position.x
+  node.y = position.y
 }
 
 function inputConnection(node, port) {
@@ -1406,23 +1468,21 @@ onBeforeUnmount(() => {
               :transform="`translate(${node.x} ${node.y})`"
               @pointerdown="handleNodePointerDown($event, node)"
             >
-              <rect v-if="selectedNodeId === node.id" x="-7" y="-7" :width="NODE_WIDTH + 14" :height="NODE_HEIGHT + 14" rx="12" class="selection-outline" />
+              <rect v-if="selectedNodeId === node.id" x="-7" y="-7" :width="NODE_WIDTH + 14" :height="nodeHeight(node) + 14" rx="12" class="selection-outline" />
 
               <template v-if="GATE_TYPES.includes(node.type)">
-                <line x1="8" :y1="inputCount(node.type) === 2 ? 15 : 28" x2="19" :y2="inputCount(node.type) === 2 ? 15 : 28" class="pin-stem" />
-                <line v-if="inputCount(node.type) === 2" x1="8" y1="41" x2="19" y2="41" class="pin-stem" />
-                <line :x1="gateOutputStart(node.type)" y1="28" x2="106" y2="28" class="pin-stem" />
+                <line v-for="port in inputCount(node)" :key="`input-stem-${port}`" x1="8" :y1="inputLocalY(node, port - 1)" x2="19" :y2="inputLocalY(node, port - 1)" class="pin-stem" />
+                <line :x1="gateOutputStart(node.type)" :y1="outputLocalY(node)" x2="106" :y2="outputLocalY(node)" class="pin-stem" />
                 <path v-if="node.type === 'AND' || node.type === 'NAND'" d="M19 4 H51 A24 24 0 0 1 51 52 H19 Z" class="gate-body" />
-                <path v-else-if="node.type === 'OR' || node.type === 'NOR'" d="M19 4 Q34 28 19 52 Q49 51 81 28 Q49 5 19 4 Z" class="gate-body" />
+                <path v-else-if="node.type === 'OR' || node.type === 'NOR'" :d="orGatePath(node)" class="gate-body" />
                 <g v-else-if="node.type === 'XOR' || node.type === 'XNOR'">
                   <path d="M12 4 Q27 28 12 52" class="gate-extra-curve" />
                   <path d="M19 4 Q34 28 19 52 Q49 51 81 28 Q49 5 19 4 Z" class="gate-body" />
                 </g>
                 <path v-else d="M20 4 L74 28 L20 52 Z" class="gate-body" />
-                <circle v-if="['NAND', 'NOR', 'XNOR', 'NOT'].includes(node.type)" cx="86" cy="28" r="4.5" class="inversion-bubble" />
-                <text v-if="node.type !== 'NOT'" x="48" y="31" class="gate-inner-label">{{ node.type === 'NAND' ? 'AND' : node.type === 'NOR' ? 'OR' : node.type === 'XNOR' ? 'XOR' : node.type }}</text>
-                <circle cx="8" :cy="inputCount(node.type) === 2 ? 15 : 28" r="4" class="input-port" :class="{ 'port-ready': wireStart }" :aria-label="t('portA')" @pointerdown.stop.prevent="finishWire($event, node, 0)" />
-                <circle v-if="inputCount(node.type) === 2" cx="8" cy="41" r="4" class="input-port" :class="{ 'port-ready': wireStart }" :aria-label="t('portB')" @pointerdown.stop.prevent="finishWire($event, node, 1)" />
+                <circle v-if="['NAND', 'NOR', 'XNOR', 'NOT'].includes(node.type)" cx="86" :cy="outputLocalY(node)" r="4.5" class="inversion-bubble" />
+                <text v-if="node.type !== 'NOT'" x="48" :y="outputLocalY(node) + 3" class="gate-inner-label">{{ node.type === 'NAND' ? 'AND' : node.type === 'NOR' ? 'OR' : node.type === 'XNOR' ? 'XOR' : node.type }}</text>
+                <circle v-for="port in inputCount(node)" :key="`input-port-${port}`" cx="8" :cy="inputLocalY(node, port - 1)" r="4" class="input-port" :class="{ 'port-ready': wireStart }" :aria-label="inputPinName(port - 1)" @pointerdown.stop.prevent="finishWire($event, node, port - 1)" />
               </template>
 
               <template v-else-if="node.type === 'INPUT'">
@@ -1461,11 +1521,11 @@ onBeforeUnmount(() => {
               </template>
               <template v-else>
                 <line x1="83" y1="28" x2="106" y2="28" class="pin-stem" />
-                <circle cx="106" cy="28" r="4.2" class="output-port" :class="{ 'port-started': wireStart?.id === node.id }" :aria-label="t('outputPin')" @pointerdown.stop.prevent="beginWire($event, node)" />
+                <circle cx="106" :cy="outputLocalY(node)" r="4.2" class="output-port" :class="{ 'port-started': wireStart?.id === node.id }" :aria-label="t('outputPin')" @pointerdown.stop.prevent="beginWire($event, node)" />
               </template>
-              <text x="58" y="74" text-anchor="middle" class="node-caption">{{ node.label }}</text>
-              <text v-if="node.type === 'INPUT' || node.type === 'VCC' || node.type === 'GND'" x="58" y="86" text-anchor="middle" class="node-subcaption">{{ node.type === 'INPUT' ? (node.value ? t('high') : t('low')) : node.type === 'VCC' ? 'LOGIC 1' : 'LOGIC 0' }}</text>
-              <text v-else-if="node.type === 'LED'" x="58" y="86" text-anchor="middle" class="node-subcaption" :class="{ 'subcaption-high': isRunning && nodeDisplayValue(node) }">{{ nodeDisplayValue(node) ? 'HIGH · 1' : 'LOW · 0' }}</text>
+              <text x="58" :y="nodeCaptionY(node)" text-anchor="middle" class="node-caption">{{ node.label }}</text>
+              <text v-if="node.type === 'INPUT' || node.type === 'VCC' || node.type === 'GND'" x="58" :y="nodeCaptionY(node) + 12" text-anchor="middle" class="node-subcaption">{{ node.type === 'INPUT' ? (node.value ? t('high') : t('low')) : node.type === 'VCC' ? 'LOGIC 1' : 'LOGIC 0' }}</text>
+              <text v-else-if="node.type === 'LED'" x="58" :y="nodeCaptionY(node) + 12" text-anchor="middle" class="node-subcaption" :class="{ 'subcaption-high': isRunning && nodeDisplayValue(node) }">{{ nodeDisplayValue(node) ? 'HIGH · 1' : 'LOW · 0' }}</text>
             </g>
           </svg>
 
@@ -1560,11 +1620,19 @@ onBeforeUnmount(() => {
             <div class="signal-meter"><span :style="{ width: isSelectedOutputHigh ? '100%' : '6%' }"></span></div>
           </div>
 
-          <div v-if="inputCount(selectedNode.type)" class="inspector-section pin-section">
+          <div v-if="['OR', 'NOR'].includes(selectedNode.type)" class="inspector-section gate-input-count-section">
+            <div class="inspector-section-title">{{ t('gateInputCount') }}</div>
+            <div class="gate-input-count-control">
+              <button type="button" class="small-icon-button" :aria-label="t('removeGateInput')" :title="t('removeGateInput')" :disabled="inputCount(selectedNode) <= 2" @click="changeGateInputCount(selectedNode, -1)"><Minus :size="14" /></button>
+              <strong>{{ inputCount(selectedNode) }}</strong>
+              <button type="button" class="small-icon-button" :aria-label="t('addGateInput')" :title="t('addGateInput')" :disabled="inputCount(selectedNode) >= MAX_GATE_INPUTS" @click="changeGateInputCount(selectedNode, 1)"><Plus :size="14" /></button>
+            </div>
+          </div>
+          <div v-if="inputCount(selectedNode)" class="inspector-section pin-section">
             <div class="inspector-section-title">{{ t('inputPins') }}</div>
-            <div v-for="port in inputCount(selectedNode.type)" :key="port" class="connection-row">
-              <span class="connection-port">{{ port === 1 ? 'A' : 'B' }}</span>
-              <span class="connection-name">{{ inputConnection(selectedNode, port - 1)?.label || (port === 1 ? t('portA') : t('portB')) }}</span>
+            <div v-for="port in inputCount(selectedNode)" :key="port" class="connection-row">
+              <span class="connection-port">{{ inputPinShortLabel(port - 1) }}</span>
+              <span class="connection-name">{{ inputConnection(selectedNode, port - 1)?.label || inputPinName(port - 1) }}</span>
               <span class="connection-status" :class="{ connected: inputConnection(selectedNode, port - 1) }">{{ inputConnection(selectedNode, port - 1) ? t('connected') : t('unconnected') }}</span>
             </div>
           </div>
@@ -1612,6 +1680,7 @@ onBeforeUnmount(() => {
             <div class="quick-tip-row"><span class="quick-tip-number">01</span><span>{{ t('tipDrag') }}</span></div>
             <div class="quick-tip-row"><span class="quick-tip-number">02</span><span>{{ t('tipWire') }}</span></div>
             <div class="quick-tip-row"><span class="quick-tip-number">03</span><span>{{ t('tipToggle') }}</span></div>
+            <div class="quick-tip-row"><span class="quick-tip-number">04</span><span>{{ t('tipOutputs') }}</span></div>
           </div>
           <div class="open-source-card">
             <div class="open-source-top"><span class="open-source-dot"></span>{{ t('openSource') }}</div>

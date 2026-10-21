@@ -7,7 +7,7 @@ A lightweight, open-source digital logic workbench built with Vue 3. Place logic
 ## Features
 
 - **Schematic editor:** drag components from the library, click to add, and drag to move them on a dotted grid.
-- **Digital components:** interactive inputs, VCC (logic HIGH), GND (logic LOW), LED outputs, and AND, OR, NOT (inverter), XOR, NAND, NOR, and XNOR gates.
+- **Digital components:** interactive inputs, VCC (logic HIGH), GND (logic LOW), multiple LED outputs, and AND, OR, NOT (inverter), XOR, NAND, NOR, and XNOR gates; OR/NOR gates can be configured with 2–16 input pins.
 - **Pin-to-pin wiring:** click an output pin, then a destination input pin. Existing input connections are replaced cleanly.
 - **Live logic simulation:** toggle an input and immediately see active wires, LED state, and the matching truth-table row update.
 - **Truth table:** generated from the circuit, with up to eight input variables; copy results as CSV.

@@ -310,6 +310,12 @@ kbd { font-family: 'DM Mono', ui-monospace, monospace; color: #78869a; backgroun
 .selected-component-copy strong { color: #dce5ef; font-size: 10px; font-weight: 700; }
 .selected-component-copy span { color: #78879a; font-size: 8px; line-height: 1.45; }
 .inspector-section { padding: 0 1px; margin: 0 0 17px; }
+.gate-input-count-control { display: flex; align-items: center; gap: 9px; }
+.gate-input-count-control .small-icon-button { width: 30px; height: 30px; color: #8ea0b6; background: #111b29; border: 1px solid rgba(142,162,189,.14); }
+.gate-input-count-control .small-icon-button:disabled { opacity: .35; cursor: not-allowed; }
+.gate-input-count-control strong { min-width: 25px; color: #dce5ef; text-align: center; font: 600 12px 'DM Mono', monospace; }
+.theme-light .gate-input-count-control .small-icon-button { color: #61758d; background: #f2f6fa; border-color: rgba(37,56,80,.14); }
+.theme-light .gate-input-count-control strong { color: #2d3f55; }
 .inspector-section-title { display: flex; align-items: center; gap: 7px; color: #8593a7; margin-bottom: 10px; font-size: 8px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 .inspector-section-title::after { content: ''; flex: 1; height: 1px; background: rgba(142,162,189,.1); }
 .field-label { display: block; margin-bottom: 6px; color: #707f93; font-size: 8px; }

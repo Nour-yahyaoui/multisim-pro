@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildTruthTable, evaluateCircuit } from '../src/logic.js'
+import { buildTruthTable, evaluateCircuit, inputCount, MAX_GATE_INPUTS } from '../src/logic.js'
 
 const inputA = { id: 'a', type: 'INPUT', label: 'A', value: false }
 const inputB = { id: 'b', type: 'INPUT', label: 'B', value: false }
@@ -48,6 +48,38 @@ describe('logic simulation', () => {
 
     const unconnectedAnd = [{ id: 'and', type: 'AND' }, output]
     expect(evaluateCircuit(unconnectedAnd, [{ id: 'and-out', from: 'and', to: 'out', toPort: 0 }]).out).toBe(false)
+  })
+
+  it('supports variable OR/NOR fan-in and multiple LED outputs', () => {
+    const inputC = { id: 'c', type: 'INPUT', label: 'C', value: false }
+    const orGate = { id: 'or', type: 'OR', label: 'OR1', inputCount: 3 }
+    const outputs = [
+      { id: 'lamp-or', type: 'LED', label: 'OUT' },
+      { id: 'lamp-a', type: 'LED', label: 'OUT2' },
+      { id: 'lamp-c', type: 'LED', label: 'OUT3' },
+    ]
+    const nodes = [inputA, inputB, inputC, orGate, ...outputs]
+    const wires = [
+      { id: 'a-or', from: 'a', to: 'or', toPort: 0 },
+      { id: 'b-or', from: 'b', to: 'or', toPort: 1 },
+      { id: 'c-or', from: 'c', to: 'or', toPort: 2 },
+      { id: 'or-lamp', from: 'or', to: 'lamp-or', toPort: 0 },
+      { id: 'a-lamp', from: 'a', to: 'lamp-a', toPort: 0 },
+      { id: 'c-lamp', from: 'c', to: 'lamp-c', toPort: 0 },
+    ]
+    const table = buildTruthTable(nodes, wires)
+    expect(inputCount(orGate)).toBe(3)
+    expect(table.outputs.map((node) => node.id)).toEqual(['lamp-or', 'lamp-a', 'lamp-c'])
+    expect(table.rows.map((row) => row.outputs['lamp-or'])).toEqual([false, true, true, true, true, true, true, true])
+    expect(table.rows.map((row) => row.outputs['lamp-a'])).toEqual([false, false, false, false, true, true, true, true])
+    expect(table.rows.map((row) => row.outputs['lamp-c'])).toEqual([false, true, false, true, false, true, false, true])
+
+    const norGate = { id: 'nor', type: 'NOR', inputCount: 3 }
+    const norWires = wires.slice(0, 3).map((wire) => ({ ...wire, to: 'nor' }))
+    expect(evaluateCircuit([...nodes.slice(0, 3), norGate], norWires, { a: false, b: false, c: false }).nor).toBe(true)
+    expect(evaluateCircuit([...nodes.slice(0, 3), norGate], norWires, { a: false, b: true, c: false }).nor).toBe(false)
+    expect(inputCount({ type: 'OR', inputCount: MAX_GATE_INPUTS + 10 })).toBe(MAX_GATE_INPUTS)
+    expect(inputCount('OR')).toBe(2)
   })
 
   it('limits displayed truth-table inputs to eight', () => {
